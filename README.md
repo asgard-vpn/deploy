@@ -64,7 +64,7 @@ cd asgard_deply
 
 # Копируем примеры
 cp inventory/hosts.yml.example inventory/hosts.yml
-cp inventory/secrets.enc.example inventory/secrets.enc.yml
+cp inventory/secrets.enc.example inventory/secrets.enc
 ```
 
 ### 2. Заполнение конфигурации
@@ -78,10 +78,10 @@ cp inventory/secrets.enc.example inventory/secrets.enc.yml
 - `tgproxy.yml` — tgproxy (Telegram MTProxy)
 - `holes.yml` — holes (дырки)
 
-**`inventory/secrets.enc.yml`** — пароли и секреты. Заполните значения, затем зашифруйте:
+**`inventory/secrets.enc`** — пароли и секреты. Заполните значения, затем зашифруйте:
 
 ```bash
-ansible-vault encrypt inventory/secrets.enc.yml
+ansible-vault encrypt inventory/secrets.enc
 ```
 
 ### 3. Первичная настройка нового сервера
@@ -144,7 +144,7 @@ deploy_gen3/
 │   ├── hosts.yml.example      # Пример инвентаря
 │   ├── hosts.yml              # Ваш инвентарь (не в git)
 │   ├── secrets.enc.example    # Пример секретов
-│   └── secrets.enc.yml        # Зашифрованные секреты (не в git)
+│   └── secrets.enc            # Зашифрованные секреты (не в git)
 ├── templates/                 # Jinja2-шаблоны Ansible
 │   ├── relay.docker-compose.yml.j2
 │   ├── relay.haproxy.cfg.j2
@@ -191,7 +191,7 @@ deploy_gen3/
 
 ## 🔐 Безопасность
 
-- Все секреты хранятся в `inventory/secrets.enc.yml` и шифруются через **ansible-vault**
+- Все секреты хранятся в `inventory/secrets.enc` и шифруются через **ansible-vault**
 - При каждом запуске playbook запрашивается пароль vault (`--ask-vault-pass`)
 - SSH-порт меняется с 22 на 1122 при `initial_server_setup`
 - fail2ban защищает от брутфорса
