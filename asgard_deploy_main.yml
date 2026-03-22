@@ -41,7 +41,7 @@
     - name: Set environment
       ansible.builtin.copy:
         dest: /opt/asgard/.env
-        mode: "0644"
+        mode: "0600"
         content: |
           POSTGRES_USER=postgres
           POSTGRES_PASSWORD=postgres
@@ -60,7 +60,7 @@
       ansible.builtin.template:
         src: templates/remnawave.env.j2
         dest: /opt/asgard/remnawave.env
-        mode: "0644"
+        mode: "0600"
         owner: root
         group: root
 
