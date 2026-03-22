@@ -1,7 +1,7 @@
 # Скопируйте этот файл в hosts.yml и настройте под свою инфраструктуру
 # cp inventory/hosts.yml.example inventory/hosts.yml
 #
-# Переменные групп вынесены в group_vars/ (all, main, relays, tgproxy, holes).
+# Переменные групп вынесены в group_vars/ (all, main, relays, relay_minimal, tgproxy).
 # Для переопределения значений создайте или отредактируйте файлы в group_vars/.
 
 main:
@@ -35,20 +35,25 @@ relays:
       public_domains:
         - "{{ primary_domain }}"
         - "{{ ocserv_domain }}"
-
     # relay-server-02:
     #   ansible_host: 192.168.1.21
-    #   ansible_user: admin
-    #   ansible_port: 1122
-    #   ansible_password: "{{ asgard_relay_password }}"
-    #   ansible_sudo_pass: "{{ asgard_relay_password }}"
-    #   primary_domain: relay2.example.com
-    #   ocserv_domain: ocserv2.example.com
-    #   ocserv_exclude_users: [admin, vpn-user]  # опционально: юзеры с ручными записями
-    #   public_domains:
-    #     - "{{ primary_domain }}"
-    #     - "{{ ocserv_domain }}"
-  # Переменные группы relays — см. group_vars/relays.yml
+    #   ...
+  children:
+    # Минимальные relay (ex-hole): только remnanode, без доп. сервисов.
+    # group_vars/relay_minimal.yml отключает все enable_*
+    relay_minimal:
+      hosts:
+        hole-server-01:
+          ansible_host: 192.168.1.40
+          ansible_user: admin
+          ansible_port: 1122
+          ansible_password: "{{ asgard_relay_password }}"
+          ansible_sudo_pass: "{{ asgard_relay_password }}"
+          primary_domain: hole1.example.com
+          ocserv_domain: "{{ primary_domain }}"
+          public_domains:
+            - "{{ primary_domain }}"
+  # Переменные: group_vars/relays.yml, relay_minimal — group_vars/relay_minimal.yml
 
 tgproxy:
   hosts:
@@ -65,16 +70,3 @@ tgproxy:
       public_domains:
         - "{{ primary_domain }}"
   # Переменные группы tgproxy — см. group_vars/tgproxy.yml
-
-holes:
-  hosts:
-    hole-server-01:
-      ansible_host: 192.168.1.40
-      ansible_user: admin
-      ansible_port: 1122
-      ansible_password: "{{ asgard_relay_password }}"
-      ansible_sudo_pass: "{{ asgard_relay_password }}"
-      primary_domain: hole1.example.com
-      public_domains:
-        - "{{ primary_domain }}"
-  # Переменные группы holes — см. group_vars/holes.yml

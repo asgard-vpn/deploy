@@ -1,0 +1,9 @@
+# Минимальные relay (ex-hole): только remnanode, без доп. сервисов.
+# Туннель для двухзвенного VPN: клиент → hole → relay → интернет.
+
+enable_ocserv: false
+enable_amnezia: false
+enable_warp: false
+enable_sing_box: false
+enable_pingtunnel: false
+enable_node_agent: false

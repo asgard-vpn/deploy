@@ -7,4 +7,4 @@ rkhunter
 inventory/secrets.enc
 inventory/secrets.enc.yml
 inventory/hosts.yml
-
+inventory/fallback

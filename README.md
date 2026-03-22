@@ -6,7 +6,7 @@
 
 ## 📋 О проекте
 
-Asgard Deploy — это набор Ansible playbook для автоматизированного развёртывания и управления инфраструктурой VPN-сервиса. Система поддерживает многоуровневую архитектуру с центральным сервером (main), релейными нодами (relays), MTProto-прокси для Telegram (tgproxy) и специальными hole-нодами.
+Asgard Deploy — это набор Ansible playbook для автоматизированного развёртывания и управления инфраструктурой VPN-сервиса. Система поддерживает многоуровневую архитектуру с центральным сервером (main), релейными нодами (relays) и MTProto-прокси для Telegram (tgproxy).
 
 ### Архитектура
 
@@ -21,10 +21,10 @@ Asgard Deploy — это набор Ansible playbook для автоматизи
           │                            │                            │
           ▼                            ▼                            ▼
 ┌─────────────────┐          ┌─────────────────┐          ┌─────────────────┐
-│     RELAYS      │          │     TGPROXY     │          │      HOLES      │
-│ Hysteria • TUIC │          │   MTProto       │          │  Туннель (вход) │
-│ Shadowsocks •   │          │   Telemt        │          │  Клиент → Hole  │
-│ Amnezia • OC    │          │                 │          │  → Relay → Сеть │
+│     RELAYS      │          │     TGPROXY     │          │ RELAY_MINIMAL    │
+│ Hysteria • TUIC │          │   MTProto       │          │ (ex-hole)       │
+│ Shadowsocks •   │          │   Telemt        │          │ Только remnanode │
+│ Amnezia • OC    │          │                 │          │ клиент→hole→relay│
 └─────────────────┘          └─────────────────┘          └─────────────────┘
 ```
 
@@ -32,8 +32,8 @@ Asgard Deploy — это набор Ansible playbook для автоматизи
 |--------|------------|
 | **main** | Центральный сервер: панель Remnawave, раздача конфигов подписчикам |
 | **relays** | VPN-реле: Hysteria, TUIC, Shadowsocks, Amnezia, OpenConnect (ocserv) |
+| **relay_minimal** | Минимальные relay (ex-hole): только remnanode, вход туннеля для двухзвенного VPN (клиент → hole → relay → интернет) |
 | **tgproxy** | MTProto-прокси для обхода блокировок Telegram |
-| **holes** | Легковесные ноды — вход туннеля для **двухзвенного** VPN (клиент → hole → relay → интернет) |
 
 ---
 
@@ -75,11 +75,11 @@ cp inventory/secrets.enc.example inventory/secrets.enc
 - `all.yml` — общие значения по умолчанию
 - `main.yml` — main; опционально: `enable_config_distributor`, `enable_ruleset_manager`
 - `relays.yml` — relays; опционально: `enable_ocserv`, `enable_amnezia`, `enable_warp`, `enable_sing_box`, `enable_pingtunnel`, `enable_node_agent`
+- `relay_minimal.yml` — минимальные relay (ex-hole): все `enable_*` отключены
 
 **`inventory/fallback/`** — кастомные заглушки HAProxy. Положите `index.html` и/или `403.html` для переопределения дефолтов из `fallback/`.
 - `relays.yml` — relays (реле-ноды)
 - `tgproxy.yml` — tgproxy (Telegram MTProxy)
-- `holes.yml` — holes (дырки)
 
 **`inventory/secrets.enc`** — пароли и секреты. Заполните значения, затем зашифруйте:
 
@@ -112,13 +112,11 @@ Playbook создаст пользователя `admin`, настроит SSH (
 ./run_playbook.sh asgard_deploy_main.yml
 
 # Реле (Hysteria, TUIC, Shadowsocks, Amnezia, ocserv)
+# Минимальные relay (ex-hole) — группа relay_minimal в inventory с отключёнными сервисами
 ./run_playbook.sh asgard_deploy_relay.yml
 
 # MTProto для Telegram
 ./run_playbook.sh asgard_deploy_tgproxy.yml
-
-# Hole-ноды (туннель для двухзвенного VPN)
-./run_playbook.sh asgard_deploy_hole.yml
 ```
 
 ---
@@ -131,14 +129,13 @@ deploy_gen3/
 ├── asgard/                    # Исходники для копирования на серверы
 │   ├── main/                  # Main: docker-compose, шаблоны
 │   ├── relay/                 # Relay: amnezia, ocserv
-│   ├── hole/                  # Hole: лёгкие туннельные ноды (двухзвенный VPN)
 │   └── tgproxy/               # TGProxy: telemt, gateway
 ├── group_vars/                # Переменные по группам
 │   ├── all.yml                # Общие (порты, defaults)
 │   ├── main.yml
 │   ├── relays.yml
-│   ├── tgproxy.yml
-│   └── holes.yml
+│   ├── relay_minimal.yml      # Минимальные relay (ex-hole): все enable_* = false
+│   └── tgproxy.yml
 ├── roles/                     # Общие роли
 │   ├── asgard_docker          # Запуск/перезапуск Docker Compose
 │   ├── asgard_certs_cron       # Cron для конвертации сертификатов
@@ -159,7 +156,6 @@ deploy_gen3/
 ├── asgard_deploy_main.yml
 ├── asgard_deploy_relay.yml
 ├── asgard_deploy_tgproxy.yml
-├── asgard_deploy_hole.yml
 ├── asgard_deploy_config.yml   # Обновление конфига main
 ├── initial_server_setup.yml   # Первичная настройка
 ├── setup_web_certs.yml        # Certbot (Let's Encrypt)
@@ -179,9 +175,8 @@ deploy_gen3/
 | `initial_server_setup.yml` | Первичная настройка: пользователь admin, SSH, UFW, Docker, fail2ban |
 | `setup_web_certs.yml` | Установка Let's Encrypt через Certbot |
 | `asgard_deploy_main.yml` | Деплой main: Remnawave, HAProxy, config-distributor |
-| `asgard_deploy_relay.yml` | Деплой relay: Hysteria, TUIC, SS, Amnezia, ocserv, MTProxy |
+| `asgard_deploy_relay.yml` | Деплой relay (в т.ч. relay_minimal / ex-hole с отключёнными сервисами) |
 | `asgard_deploy_tgproxy.yml` | Деплой MTProto-прокси для Telegram |
-| `asgard_deploy_hole.yml` | Деплой hole-нод (вход туннеля, двухзвенный VPN: клиент → hole → relay) |
 | `asgard_deploy_config.yml` | Обновление конфигурации config-distributor на main |
 | `maintenance.yml` | Апдейты системы, rkhunter, перезагрузка при необходимости |
 | `asgard_backup.yml` | Бэкап Docker volumes на локальную машину |
@@ -210,7 +205,7 @@ deploy_gen3/
 1. **Новый VPS:** `./init_server.sh new-host --ask-pass`
 2. **Добавить в `hosts.yml`** с `ansible_port: 1122`
 3. **Сертификаты:** `./init_web_certs.sh new-host`
-4. **Деплой:** `./run_playbook.sh asgard_deploy_<main|relay|tgproxy|hole>.yml -l new-host`
+4. **Деплой:** `./run_playbook.sh asgard_deploy_<main|relay|tgproxy>.yml -l new-host`
 5. **Периодически:** `./run_playbook.sh maintenance.yml`
 
 ---
@@ -218,8 +213,8 @@ deploy_gen3/
 ## 📌 Заметки
 
 - **Relay** — HAProxy (gateway) и ocserv включаются при `enable_ocserv: true`
+- **relay_minimal** (ex-hole) — группа в `relays` с `enable_*: false` в `group_vars/relay_minimal.yml`; только remnanode, вход туннеля для двухзвенного VPN
 - **TGProxy** с `self_steal: true` использует свой fallback вместо основного домена
-- **Holes** — легковесные ноды-входы туннеля: трафик идёт по цепочке **клиент → hole → relay → интернет**. Hole минималистичен, без HAProxy и лишних сервисов.
 - Порты Hysteria/TUIC/SS настраиваются в `vars` группы в `hosts.yml`
 - `main_node_domain` в relays должен указывать на `assets_domain` main-сервера
 
