@@ -15,7 +15,9 @@ frontend https
    http-request set-header X-Forwarded-For %[src]
 
    use_backend remnawave if { hdr(host) -i {{ primary_domain }} }
+{% if enable_config_distributor | default(true) | bool %}
    use_backend config_distributor if { hdr(host) -i {{ subscription_domain }} }
+{% endif %}
 
    # Обработка ассетов
    acl host_assets hdr(host) -i {{ assets_domain }}
@@ -24,11 +26,15 @@ frontend https
    acl is_script path_beg /script
    acl is_nodes path_beg /nodes
    acl is_webhook path_beg /webhook
+{% if enable_ruleset_manager | default(true) | bool %}
    use_backend ruleset_manager if host_assets is_ruleset
+{% endif %}
+{% if enable_config_distributor | default(true) | bool %}
    use_backend config_distributor if host_assets is_config
    use_backend config_distributor if host_assets is_script
    use_backend config_distributor if host_assets is_nodes
    use_backend config_distributor if host_assets is_webhook
+{% endif %}
 
    # WebSocket обработка
    http-request set-header X-Real-IP %[src]
@@ -48,18 +54,21 @@ backend remnawave
    option forwardfor
    server remnawave remnawave:3000
 
+{% if enable_ruleset_manager | default(true) | bool %}
 backend ruleset_manager
     mode http
     http-request replace-path ^/ruleset(/.*)$ \1
     server ruleset_manager ruleset-manager:8080
 
+{% endif %}
+{% if enable_config_distributor | default(true) | bool %}
 backend config_distributor
     mode http
     option forwarded
     option forwardfor
     server config_distributor config-distributor:8080
 
+{% endif %}
 backend deny_all
     mode http
     http-request deny
-

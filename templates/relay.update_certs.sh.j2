@@ -2,7 +2,7 @@
 
 openssl pkey -in /etc/letsencrypt/live/{{ primary_domain }}/privkey.pem -out /opt/asgard/remnanode_certs/privkey.key
 cp /etc/letsencrypt/live/{{ primary_domain }}/fullchain.pem /opt/asgard/remnanode_certs/fullchain.pem
-{% if use_reverse_proxy | default(true) %}
+{% if enable_ocserv | default(true) | bool %}
 
 cp /etc/letsencrypt/live/{{ ocserv_domain }}/cert.pem /opt/asgard/ocserv/certs/server-cert.pem
 cp /etc/letsencrypt/live/{{ ocserv_domain }}/privkey.pem /opt/asgard/ocserv/certs/server-key.pem

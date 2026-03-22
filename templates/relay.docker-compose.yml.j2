@@ -1,5 +1,5 @@
 services:
-{% if use_reverse_proxy | default(true) %}
+{% if enable_ocserv | default(true) | bool %}
     gateway:
         image: "haproxy:3.0.4-alpine"
         container_name: gateway
@@ -19,7 +19,7 @@ services:
         restart: always
         ports:
             - "0.0.0.0:${NODE_PORT}:${NODE_PORT}"
-{% if use_reverse_proxy | default(true) %}
+{% if enable_ocserv | default(true) | bool %}
             # 443 handled by gateway
 {% else %}
             - "443:443"
@@ -32,34 +32,28 @@ services:
             - '/var/log/remnanode:/var/log/remnanode'
             - './remnanode_certs:/etc/asgard_certs'
 
+{% if enable_warp | default(true) | bool %}
     # published local port 1080
     warp:
         image: caomingjun/warp:2025.5.943.0-2.12.0
         container_name: warp
         restart: always
-        # add removed rule back (https://github.com/opencontainers/runc/pull/3468)
         device_cgroup_rules:
         - 'c 10:200 rwm'
         environment:
         - WARP_SLEEP=2
-        # - WARP_LICENSE_KEY= # optional
-        # - WARP_ENABLE_NAT=1 # enable nat
         cap_add:
-        # Docker already have them, these are for podman users
         - MKNOD
         - AUDIT_WRITE
-        # additional required cap for warp, both for podman and docker
         - NET_ADMIN
         sysctls:
         - net.ipv6.conf.all.disable_ipv6=0
         - net.ipv4.conf.all.src_valid_mark=1
-        # uncomment for nat
-        # - net.ipv4.ip_forward=1
-        # - net.ipv6.conf.all.forwarding=1
-        # - net.ipv6.conf.all.accept_ra=2
         volumes:
         - warp_config:/var/lib/cloudflare-warp
 
+{% endif %}
+{% if enable_sing_box | default(true) | bool %}
     sing-box:
         image: ghcr.io/sagernet/sing-box:v1.12.13
         container_name: sing-box
@@ -74,7 +68,8 @@ services:
             - "${SS_PORT}:${SS_PORT}/udp"
         command: -D /var/lib/sing-box -c /etc/sing-box/config.json run
 
-{% if use_reverse_proxy | default(true) %}
+{% endif %}
+{% if enable_ocserv | default(true) | bool %}
     ocserv:
         image: quay.io/aminvakil/ocserv:1.3.0
         restart: always
@@ -95,6 +90,7 @@ services:
         - no-new-privileges
 
 {% endif %}
+{% if enable_pingtunnel | default(true) | bool %}
     pingtunnel:
         image: esrrhs/pingtunnel:latest
         restart: always
@@ -103,6 +99,8 @@ services:
         command: "./pingtunnel -type server -key ${PINGTUNNEL_KEY}"
         privileged: true
 
+{% endif %}
+{% if enable_amnezia | default(true) | bool %}
     amnezia:
         image: asgardvpn/amnezia:v1.0.0
         container_name: amnezia
@@ -131,6 +129,8 @@ services:
             start_period: 60s
             retries: 3
 
+{% endif %}
+{% if enable_node_agent | default(true) | bool %}
     node-agent:
         image: asgardvpn/node-agent:v1.2.0
         container_name: node-agent
@@ -138,11 +138,18 @@ services:
         volumes:
             - ./node-agent.yaml:/opt/asgard/node-agent.yaml:ro
             - /var/run/docker.sock:/var/run/docker.sock
+{% if enable_sing_box | default(true) | bool %}
             - ./sing-box/config.json:/etc/sing-box/config.json:rw
-{% if use_reverse_proxy | default(true) %}
+{% endif %}
+{% if enable_ocserv | default(true) | bool %}
             - ./ocserv/users/ocpasswd:/etc/ocserv/ocpasswd:rw
 {% endif %}
+{% if enable_amnezia | default(true) | bool %}
             - ./amnezia/clients:/etc/amnezia/clients:ro
+{% endif %}
+{% endif %}
 volumes:
+{% if enable_warp | default(true) | bool %}
     warp_config:
-    mtproto_config:
+{% endif %}
+    mtproto_config: {}

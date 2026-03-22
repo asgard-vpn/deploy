@@ -73,7 +73,8 @@ cp inventory/secrets.enc.example inventory/secrets.enc
 
 **`group_vars/`** — переменные по группам (порты, домены маскировки и т.д.):
 - `all.yml` — общие значения по умолчанию
-- `main.yml` — main (центральная панель)
+- `main.yml` — main; опционально: `enable_config_distributor`, `enable_ruleset_manager`
+- `relays.yml` — relays; опционально: `enable_ocserv`, `enable_amnezia`, `enable_warp`, `enable_sing_box`, `enable_pingtunnel`, `enable_node_agent`
 - `relays.yml` — relays (реле-ноды)
 - `tgproxy.yml` — tgproxy (Telegram MTProxy)
 - `holes.yml` — holes (дырки)
@@ -211,7 +212,7 @@ deploy_gen3/
 
 ## 📌 Заметки
 
-- **Relay** может работать с `use_reverse_proxy: true` (HAProxy + ocserv) или `false`
+- **Relay** — HAProxy (gateway) и ocserv включаются при `enable_ocserv: true`
 - **TGProxy** с `self_steal: true` использует свой fallback вместо основного домена
 - **Holes** — легковесные ноды-входы туннеля: трафик идёт по цепочке **клиент → hole → relay → интернет**. Hole минималистичен, без HAProxy и лишних сервисов.
 - Порты Hysteria/TUIC/SS настраиваются в `vars` группы в `hosts.yml`

@@ -27,6 +27,7 @@
         mode: a+x
       loop:
         - /opt/asgard/amnezia/init.sh
+      when: enable_amnezia | default(true) | bool
 
     - name: Setup Environment
       ansible.builtin.template:
@@ -43,6 +44,7 @@
         mode: "0644"
         owner: root
         group: root
+      when: enable_amnezia | default(true) | bool
 
     - name: Setup HaProxy config
       ansible.builtin.template:
@@ -51,7 +53,7 @@
         mode: "0644"
         owner: root
         group: root
-      when: use_reverse_proxy | default(true) | bool
+      when: enable_ocserv | default(true) | bool
 
     - name: Setup cert update script
       ansible.builtin.template:
@@ -68,7 +70,7 @@
         mode: "0644"
         owner: root
         group: root
-      when: use_reverse_proxy | default(true) | bool
+      when: enable_ocserv | default(true) | bool
 
     - name: Make certs inaccessible
       ansible.builtin.file:
@@ -114,6 +116,7 @@
         mode: "0644"
         owner: root
         group: root
+      when: enable_node_agent | default(true) | bool
 
     - name: Check Amnezia is initialized
       ansible.builtin.stat:
@@ -123,7 +126,9 @@
     - name: Setup Amnezia config
       ansible.builtin.shell:
         /opt/asgard/amnezia/init.sh
-      when: not amnezia_initialized.stat.exists
+      when:
+        - enable_amnezia | default(true) | bool
+        - not amnezia_initialized.stat.exists
 
     - name: Start and restart Asgard services
       ansible.builtin.include_role:

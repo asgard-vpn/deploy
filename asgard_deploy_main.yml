@@ -15,6 +15,14 @@
         group: root
         mode: "0644"
 
+    - name: Setup docker-compose
+      ansible.builtin.template:
+        src: templates/main.docker-compose.yml.j2
+        dest: /opt/asgard/docker-compose.yml
+        mode: "0644"
+        owner: root
+        group: root
+
     - name: Setup update certs script
       ansible.builtin.template:
         src: templates/main.update_certs.sh.j2
@@ -63,6 +71,7 @@
         mode: "0600"
         owner: root
         group: root
+      when: enable_config_distributor | default(true) | bool
 
     - name: Make certs inaccessible
       ansible.builtin.file:

@@ -31,7 +31,6 @@ relays:
       ansible_sudo_pass: "{{ asgard_relay_password }}"
       primary_domain: relay1.example.com
       ocserv_domain: ocserv1.example.com
-      use_reverse_proxy: true
       # ocserv_exclude_users: []  # опционально: юзеры с ручными записями в ocpasswd (не генерировать)
       public_domains:
         - "{{ primary_domain }}"
@@ -45,7 +44,7 @@ relays:
     #   ansible_sudo_pass: "{{ asgard_relay_password }}"
     #   primary_domain: relay2.example.com
     #   ocserv_domain: ocserv2.example.com
-    #   ocserv_exclude_users: [admin, vpn-user]  # если нужны ручные записи
+    #   ocserv_exclude_users: [admin, vpn-user]  # опционально: юзеры с ручными записями
     #   public_domains:
     #     - "{{ primary_domain }}"
     #     - "{{ ocserv_domain }}"

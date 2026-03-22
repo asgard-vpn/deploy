@@ -3,21 +3,25 @@ main:
   token: {{ nodes_secret_token }}
 
 node:
-{% if use_reverse_proxy | default(true) %}
+{% if enable_ocserv | default(true) | bool %}
   ocserv_url: https://{{ ocserv_domain }}/
 {% endif %}
   services:
+{% if enable_sing_box | default(true) | bool %}
     sing-box:
       config_path: /etc/sing-box/config.json
       container_name: sing-box
       action: reload
-{% if use_reverse_proxy | default(true) %}
+{% endif %}
+{% if enable_ocserv | default(true) | bool %}
     ocserv:
       config_path: /etc/ocserv/ocpasswd
       container_name: ocserv
       action: restart
 {% endif %}
+{% if enable_amnezia | default(true) | bool %}
     amnezia:
       config_path: /etc/amnezia/clients
       container_name: amnezia
       action: amnezia-sync
+{% endif %}

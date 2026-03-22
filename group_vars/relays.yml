@@ -2,8 +2,13 @@
 
 asgard_admin_password: "{{ asgard_relay_password }}"
 
-# HAProxy как reverse proxy для ocserv/remnanode
-use_reverse_proxy: true
+# Опциональные сервисы (false = не включать в docker-compose)
+enable_ocserv: true
+enable_amnezia: true
+enable_warp: true
+enable_sing_box: true
+enable_pingtunnel: true
+enable_node_agent: true
 
 # Маскировка MTProxy под легитимный домен
 mtproto_camouflage_domain: www.example.org
@@ -14,14 +19,7 @@ main_node_domain: assets.example.com
 # Роль asgard_logrotate
 asgard_logrotate_enabled: true
 
-# Роль asgard_ufw
+# Роль asgard_ufw (порты зависят от включённых сервисов)
 asgard_ufw_allow_node_port: true
-asgard_ufw_tcp_ports:
-  - "{{ ss_port }}"
-  - 443
-asgard_ufw_udp_ports:
-  - "{{ hysteria_port }}"
-  - "{{ tuic_port }}"
-  - "{{ ss_port }}"
-  - "{{ amnezia_port }}"
-  - 443
+asgard_ufw_tcp_ports: "{{ ([ss_port] if enable_sing_box | default(true) | bool else []) + [443] }}"
+asgard_ufw_udp_ports: "{{ ([hysteria_port, tuic_port, ss_port] if enable_sing_box | default(true) | bool else []) + ([amnezia_port] if enable_amnezia | default(true) | bool else []) + [443] }}"

@@ -28,15 +28,18 @@ templates:
     ss_password: {{ ss_password }}
     assets_domain: {{ assets_domain }}
 
-# Ноды берутся из inventory (группа relays). Для каждой ноды — сервисы и их параметры.
+# Ноды берутся из inventory (группа relays). Сервисы зависят от enable_* переменных.
 nodes:
 {% for host in groups['relays'] %}
   {{ host }}:
     services:
+{% if hostvars[host].get('enable_sing_box', true) | bool %}
       sing-box:
         template: sing-box.json.tmpl
         vars:
           hysteria_domain: {{ hostvars[host]['primary_domain'] }}
+{% endif %}
+{% if hostvars[host].get('enable_ocserv', true) | bool %}
       ocserv:
         template: ocpasswd.tmpl
         vars:
@@ -46,12 +49,14 @@ nodes:
             - {{ user }}
 {% endfor %}
 {% endif %}
+{% endif %}
+{% if hostvars[host].get('enable_amnezia', true) | bool %}
       amnezia:
         template: amnezia.tmpl
+{% endif %}
 
 {% endfor %}
 # Squads — привязка групп клиентов к нодам. node = hostname из groups.relays.
-# Для разных squads можно указать разные ноды (например, Gamers → relay-server-02).
 squads:
   Routers:
     - node: {{ groups['relays'][0] }}
