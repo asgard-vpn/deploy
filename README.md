@@ -75,6 +75,8 @@ cp inventory/secrets.enc.example inventory/secrets.enc
 - `all.yml` — общие значения по умолчанию
 - `main.yml` — main; опционально: `enable_config_distributor`, `enable_ruleset_manager`
 - `relays.yml` — relays; опционально: `enable_ocserv`, `enable_amnezia`, `enable_warp`, `enable_sing_box`, `enable_pingtunnel`, `enable_node_agent`
+
+**`inventory/fallback/`** — кастомные заглушки HAProxy. Положите `index.html` и/или `403.html` для переопределения дефолтов из `fallback/`.
 - `relays.yml` — relays (реле-ноды)
 - `tgproxy.yml` — tgproxy (Telegram MTProxy)
 - `holes.yml` — holes (дырки)
@@ -125,9 +127,10 @@ Playbook создаст пользователя `admin`, настроит SSH (
 
 ```
 deploy_gen3/
+├── fallback/                  # Заглушки HAProxy (index.html, 403.html)
 ├── asgard/                    # Исходники для копирования на серверы
 │   ├── main/                  # Main: docker-compose, шаблоны
-│   ├── relay/                 # Relay: fallback, amnezia, ocserv
+│   ├── relay/                 # Relay: amnezia, ocserv
 │   ├── hole/                  # Hole: лёгкие туннельные ноды (двухзвенный VPN)
 │   └── tgproxy/               # TGProxy: telemt, gateway
 ├── group_vars/                # Переменные по группам
@@ -140,12 +143,14 @@ deploy_gen3/
 │   ├── asgard_docker          # Запуск/перезапуск Docker Compose
 │   ├── asgard_certs_cron       # Cron для конвертации сертификатов
 │   ├── asgard_logrotate       # Logrotate для remnanode
-│   └── asgard_ufw             # UFW: открытие портов
+│   ├── asgard_ufw             # UFW: открытие портов
+│   └── asgard_fallback        # Fallback-заглушки (inventory/fallback переопределяет)
 ├── inventory/
 │   ├── hosts.yml.example      # Пример инвентаря
 │   ├── hosts.yml              # Ваш инвентарь (не в git)
 │   ├── secrets.enc.example    # Пример секретов
-│   └── secrets.enc            # Зашифрованные секреты (не в git)
+│   ├── secrets.enc            # Зашифрованные секреты (не в git)
+│   └── fallback/              # Опционально: свои index.html, 403.html (заглушки HAProxy)
 ├── templates/                 # Jinja2-шаблоны Ansible
 │   ├── relay.docker-compose.yml.j2
 │   ├── relay.haproxy.cfg.j2

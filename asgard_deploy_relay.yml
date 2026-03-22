@@ -13,6 +13,11 @@
         group: root
         mode: "0644"
 
+    - name: Deploy fallback files
+      ansible.builtin.include_role:
+        name: asgard_fallback
+      when: enable_ocserv | default(true) | bool
+
     - name: Setup docker-compose
       ansible.builtin.template:
         src: templates/relay.docker-compose.yml.j2

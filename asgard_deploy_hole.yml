@@ -13,6 +13,10 @@
         group: root
         mode: "0644"
 
+    - name: Deploy fallback files
+      ansible.builtin.include_role:
+        name: asgard_fallback
+
     - name: Setup Environment
       ansible.builtin.template:
         src: templates/hole.env.j2
