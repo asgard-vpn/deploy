@@ -1,0 +1,11 @@
+# Переменные для группы holes (дырки/remnanode)
+
+asgard_admin_password: "{{ asgard_relay_password }}"
+
+# Роль asgard_logrotate
+asgard_logrotate_enabled: true
+
+# Роль asgard_ufw
+asgard_ufw_allow_node_port: true
+asgard_ufw_tcp_ports: [443]
+asgard_ufw_udp_ports: [443]

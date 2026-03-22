@@ -1,0 +1,17 @@
+---
+# Logrotate для логов remnanode
+
+- name: Setup logrotate for remnanode
+  ansible.builtin.copy:
+    dest: /etc/logrotate.d/remnanode
+    mode: "0644"
+    content: |
+      /var/log/remnanode/*.log {
+            size 10M
+            rotate 5
+            compress
+            missingok
+            notifempty
+            copytruncate
+        }
+  when: asgard_logrotate_enabled | default(false) | bool

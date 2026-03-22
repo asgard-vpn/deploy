@@ -1,0 +1,19 @@
+---
+# Cron для конвертации сертификатов Let's Encrypt
+
+# Удаляем старую запись с опечаткой (convert cets), чтобы при обновлении не дублировать задачу
+- name: Remove old cert convert cron entry (typo in name)
+  ansible.builtin.cron:
+    name: convert cets
+    user: root
+    state: absent
+
+- name: Add cert convert tasks to cron
+  ansible.builtin.cron:
+    name: convert certs
+    user: root
+    day: '*'
+    hour: "{{ asgard_certs_cron_hour | default('1') }}"
+    minute: "{{ asgard_certs_cron_minute | default('0') }}"
+    job: "{{ asgard_certs_cron_script | default('/opt/asgard/update_certs.sh') }}"
+  when: asgard_certs_cron_enabled | default(true) | bool

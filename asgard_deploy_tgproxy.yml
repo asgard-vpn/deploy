@@ -47,14 +47,9 @@
     #     owner: root
     #     group: root
 
-    - name: Open TCP ports
-      community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-        state: enabled
-      loop:
-        - 443
+    - name: Open firewall ports
+      ansible.builtin.include_role:
+        name: asgard_ufw
 
     - name: Deploy Docker Compose
       ansible.builtin.template:
@@ -64,23 +59,10 @@
         owner: root
         group: root
 
-    - name: Start Asgard services
-      community.docker.docker_compose_v2:
-        project_src: /opt/asgard
-        remove_orphans: true
+    - name: Start and restart Asgard services
+      ansible.builtin.include_role:
+        name: asgard_docker
 
-    - name: Restart Asgard services
-      community.docker.docker_compose_v2:
-        project_src: /opt/asgard
-        remove_orphans: true
-        state: restarted
-
-    - name: Add cert convert tasks to cron
-      ansible.builtin.cron:
-        name: convert cets
-        day: '*'
-        hour: 1
-        minute: 0
-        job: /opt/asgard/update_certs.sh
-      when:
-        - self_steal | default(false) | bool
+    - name: Setup cert convert cron
+      ansible.builtin.include_role:
+        name: asgard_certs_cron

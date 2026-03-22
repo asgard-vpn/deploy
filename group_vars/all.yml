@@ -1,0 +1,9 @@
+# Общие переменные для всех групп
+# Переменные из secrets.enc (asgard_*_password, mtproto_secret и т.д.) подставляются при запуске
+
+# Порты протоколов (значения по умолчанию для relay/config-distributor)
+hysteria_port: 8443
+tuic_port: 9443
+ss_port: 9008
+amnezia_port: 27015
+remnawave_app_port: 8717

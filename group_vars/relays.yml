@@ -1,0 +1,27 @@
+# Переменные для группы relays (реле-ноды)
+
+asgard_admin_password: "{{ asgard_relay_password }}"
+
+# HAProxy как reverse proxy для ocserv/remnanode
+use_reverse_proxy: true
+
+# Маскировка MTProxy под легитимный домен
+mtproto_camouflage_domain: www.example.org
+
+# Домен главной ноды (assets) для node-agent и подписок
+main_node_domain: assets.example.com
+
+# Роль asgard_logrotate
+asgard_logrotate_enabled: true
+
+# Роль asgard_ufw
+asgard_ufw_allow_node_port: true
+asgard_ufw_tcp_ports:
+  - "{{ ss_port }}"
+  - 443
+asgard_ufw_udp_ports:
+  - "{{ hysteria_port }}"
+  - "{{ tuic_port }}"
+  - "{{ ss_port }}"
+  - "{{ amnezia_port }}"
+  - 443

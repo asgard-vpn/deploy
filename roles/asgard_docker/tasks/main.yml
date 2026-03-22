@@ -1,0 +1,13 @@
+---
+# Запуск и перезапуск Docker Compose для Asgard
+
+- name: Start Asgard services
+  community.docker.docker_compose_v2:
+    project_src: "{{ asgard_docker_project_src | default('/opt/asgard') }}"
+    remove_orphans: true
+
+- name: Restart Asgard services
+  community.docker.docker_compose_v2:
+    project_src: "{{ asgard_docker_project_src | default('/opt/asgard') }}"
+    remove_orphans: true
+    state: restarted

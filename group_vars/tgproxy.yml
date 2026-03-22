@@ -1,0 +1,9 @@
+# Переменные для группы tgproxy (Telegram MTProxy)
+
+asgard_admin_password: "{{ asgard_relay_password }}"
+
+# Cron для certs только при self_steal (host var)
+asgard_certs_cron_enabled: "{{ self_steal | default(false) | bool }}"
+
+# Роль asgard_ufw
+asgard_ufw_tcp_ports: [443]

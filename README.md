@@ -69,7 +69,14 @@ cp inventory/secrets.enc.example inventory/secrets.enc.yml
 
 ### 2. Заполнение конфигурации
 
-**`inventory/hosts.yml`** — хосты, домены, порты. Редактируйте под свою инфраструктуру.
+**`inventory/hosts.yml`** — хосты, домены. Редактируйте под свою инфраструктуру.
+
+**`group_vars/`** — переменные по группам (порты, домены маскировки и т.д.):
+- `all.yml` — общие значения по умолчанию
+- `main.yml` — main (центральная панель)
+- `relays.yml` — relays (реле-ноды)
+- `tgproxy.yml` — tgproxy (Telegram MTProxy)
+- `holes.yml` — holes (дырки)
 
 **`inventory/secrets.enc.yml`** — пароли и секреты. Заполните значения, затем зашифруйте:
 
@@ -122,6 +129,17 @@ deploy_gen3/
 │   ├── relay/                 # Relay: fallback, amnezia, ocserv
 │   ├── hole/                  # Hole: лёгкие туннельные ноды (двухзвенный VPN)
 │   └── tgproxy/               # TGProxy: telemt, gateway
+├── group_vars/                # Переменные по группам
+│   ├── all.yml                # Общие (порты, defaults)
+│   ├── main.yml
+│   ├── relays.yml
+│   ├── tgproxy.yml
+│   └── holes.yml
+├── roles/                     # Общие роли
+│   ├── asgard_docker          # Запуск/перезапуск Docker Compose
+│   ├── asgard_certs_cron       # Cron для конвертации сертификатов
+│   ├── asgard_logrotate       # Logrotate для remnanode
+│   └── asgard_ufw             # UFW: открытие портов
 ├── inventory/
 │   ├── hosts.yml.example      # Пример инвентаря
 │   ├── hosts.yml              # Ваш инвентарь (не в git)

@@ -1,5 +1,8 @@
 # Скопируйте этот файл в hosts.yml и настройте под свою инфраструктуру
 # cp inventory/hosts.yml.example inventory/hosts.yml
+#
+# Переменные групп вынесены в group_vars/ (all, main, relays, tgproxy, holes).
+# Для переопределения значений создайте или отредактируйте файлы в group_vars/.
 
 main:
   hosts:
@@ -16,13 +19,7 @@ main:
         - "{{ primary_domain }}"
         - "{{ subscription_domain }}"
         - "{{ assets_domain }}"
-  vars:
-    asgard_admin_password: "{{ asgard_main_password }}"
-    # ocserv_domain: ""  # опционально: домен ocserv, чьи серты не мержить (если main хранит серты relay-серверов)
-    hysteria_port: 2053
-    tuic_port: 9443
-    ss_port: 9008
-    ss_password: "{{ ss_password }}"
+  # Переменные группы main — см. group_vars/main.yml
 
 relays:
   hosts:
@@ -52,17 +49,7 @@ relays:
     #   public_domains:
     #     - "{{ primary_domain }}"
     #     - "{{ ocserv_domain }}"
-
-  vars:
-    asgard_admin_password: "{{ asgard_relay_password }}"
-    use_reverse_proxy: true  # default for relay group
-    remnawave_app_port: 8717
-    mtproto_camouflage_domain: www.example.org
-    hysteria_port: 8443
-    tuic_port: 9443
-    ss_port: 9008
-    amnezia_port: 27015
-    main_node_domain: assets.example.com
+  # Переменные группы relays — см. group_vars/relays.yml
 
 tgproxy:
   hosts:
@@ -78,9 +65,7 @@ tgproxy:
       self_steal: false
       public_domains:
         - "{{ primary_domain }}"
-
-  vars:
-    asgard_admin_password: "{{ asgard_relay_password }}"
+  # Переменные группы tgproxy — см. group_vars/tgproxy.yml
 
 holes:
   hosts:
@@ -93,7 +78,4 @@ holes:
       primary_domain: hole1.example.com
       public_domains:
         - "{{ primary_domain }}"
-
-  vars:
-    asgard_admin_password: "{{ asgard_relay_password }}"
-    remnawave_app_port: 8717
+  # Переменные группы holes — см. group_vars/holes.yml

@@ -76,12 +76,13 @@
         mode: "0600"
         recurse: true
 
-    - name: Allow node port
-      community.general.ufw:
-        rule: allow
-        proto: tcp
-        port: "{{ remnawave_app_port }}"
-        state: enabled
+    - name: Setup logrotate
+      ansible.builtin.include_role:
+        name: asgard_logrotate
+
+    - name: Open firewall ports
+      ansible.builtin.include_role:
+        name: asgard_ufw
 
     - name: Download latest Geoip database
       ansible.builtin.get_url:
@@ -97,20 +98,6 @@
         mode: '0644'
         force: true
 
-    - name: Setup logrotate
-      ansible.builtin.copy:
-        dest: /etc/logrotate.d/remnanode
-        mode: "0644"
-        content: |
-          /var/log/remnanode/*.log {
-                size 10M
-                rotate 5
-                compress
-                missingok
-                notifempty
-                copytruncate
-            }
-
     - name: Copy MTProto Proxy files
       ansible.builtin.copy:
         src: mtproxy
@@ -119,29 +106,6 @@
         owner: root
         group: root
         mode: "0644"
-
-    - name: Open UDP ports
-      community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: udp
-        state: enabled
-      loop:
-        - "{{ hysteria_port }}"
-        - "{{ tuic_port }}"
-        - "{{ ss_port }}"
-        - "{{ amnezia_port }}"
-        - 443
-
-    - name: Open TCP ports
-      community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-        state: enabled
-      loop:
-        - "{{ ss_port }}"
-        - 443
 
     - name: Setup Node Agent config
       ansible.builtin.template:
@@ -161,21 +125,10 @@
         /opt/asgard/amnezia/init.sh
       when: not amnezia_initialized.stat.exists
 
-    - name: Start Asgard services
-      community.docker.docker_compose_v2:
-        project_src: /opt/asgard
-        remove_orphans: true
+    - name: Start and restart Asgard services
+      ansible.builtin.include_role:
+        name: asgard_docker
 
-    - name: Restart Asgard services
-      community.docker.docker_compose_v2:
-        project_src: /opt/asgard
-        remove_orphans: true
-        state: restarted
-
-    - name: Add cert convert tasks to cron
-      ansible.builtin.cron:
-        name: convert cets
-        day: '*'
-        hour: 1
-        minute: 0
-        job: /opt/asgard/update_certs.sh
+    - name: Setup cert convert cron
+      ansible.builtin.include_role:
+        name: asgard_certs_cron

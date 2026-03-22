@@ -1,0 +1,5 @@
+---
+asgard_certs_cron_enabled: true
+asgard_certs_cron_hour: "1"
+asgard_certs_cron_minute: "0"
+asgard_certs_cron_script: /opt/asgard/update_certs.sh
