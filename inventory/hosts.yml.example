@@ -3,6 +3,9 @@
 #
 # Переменные групп вынесены в group_vars/ (all, main, relays, relay_minimal, tgproxy).
 # Для переопределения значений создайте или отредактируйте файлы в group_vars/.
+#
+# SSH-ключи: задайте asgard_ssh_public_keys в group_vars/all.yml или host_vars для
+# автоматической настройки при init_server. См. group_vars/all.yml.
 
 main:
   hosts:

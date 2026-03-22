@@ -97,6 +97,17 @@ ansible-vault encrypt inventory/secrets.enc
 
 Playbook создаст пользователя `admin`, настроит SSH (порт 1122), UFW, Docker, fail2ban и перезагрузит сервер при необходимости.
 
+**Опционально — аутентификация по ключам:** задайте в `group_vars/all.yml` или `host_vars`:
+
+```yaml
+asgard_ssh_public_keys:
+  - "ssh-ed25519 AAAAC3... ваш_email"
+  # или: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_ed25519.pub') }}"
+asgard_ssh_disable_password_auth: false  # true — отключить пароль (только после проверки входа по ключу!)
+```
+
+Запустите `init_server` — ключи будут добавлены пользователю `admin`. Перед `asgard_ssh_disable_password_auth: true` обязательно проверьте вход по ключу. Для Ansible добавьте в `hosts.yml`: `ansible_ssh_private_key_file: ~/.ssh/id_ed25519` (и при необходимости `--ask-become-pass` для sudo).
+
 ### 4. Установка SSL-сертификатов
 
 После `init_server` обновите в `hosts.yml` порт SSH на 1122 (или свой) и выполните:

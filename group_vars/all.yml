@@ -1,6 +1,12 @@
 # Общие переменные для всех групп
 # Переменные из secrets.enc (asgard_*_password, mtproto_secret и т.д.) подставляются при запуске
 
+# SSH-ключи (опционально, для initial_server_setup)
+# asgard_ssh_public_keys:
+#   - "ssh-ed25519 AAAAC3... user@host"
+#   - "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_ed25519.pub') }}"
+# asgard_ssh_disable_password_auth: false  # true — отключить пароль после настройки ключей
+
 # Порты протоколов (значения по умолчанию для relay/config-distributor)
 hysteria_port: 8443
 tuic_port: 9443

@@ -35,6 +35,24 @@
         password: "{{ asgard_admin_password | password_hash('sha512') }}"
         create_home: true
 
+    - name: Add SSH authorized keys for admin
+      ansible.builtin.authorized_key:
+        user: admin
+        key: "{{ item }}"
+        state: present
+      loop: "{{ asgard_ssh_public_keys }}"
+      when: asgard_ssh_public_keys | default([]) | length > 0
+
+    - name: Disable password authentication for SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+      when:
+        - asgard_ssh_disable_password_auth | default(false) | bool
+        - asgard_ssh_public_keys | default([]) | length > 0
+
     - name: Disable password authentication for root
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
