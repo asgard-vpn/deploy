@@ -2,6 +2,9 @@
 
 asgard_admin_password: "{{ asgard_main_password }}"
 
+# Swagger/Scalar API docs (true = /docs и /scalar доступны публично)
+remnawave_docs_enabled: false
+
 # Опциональные сервисы (false = не включать в docker-compose)
 enable_config_distributor: true
 enable_ruleset_manager: true
