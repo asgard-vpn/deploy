@@ -39,14 +39,12 @@
     #     - /opt/asgard/update_certs.sh
 
     - name: Set environment
-      ansible.builtin.copy:
+      ansible.builtin.template:
+        src: templates/main.env.j2
         dest: /opt/asgard/.env
         mode: "0600"
-        content: |
-          POSTGRES_USER=postgres
-          POSTGRES_PASSWORD=postgres
-          POSTGRES_DB=postgres
-          REMNAWAVE_PANEL_URL=https://{{ primary_domain }}
+        owner: root
+        group: root
 
     - name: Setup HaProxy config
       ansible.builtin.template:

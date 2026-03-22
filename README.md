@@ -81,7 +81,7 @@ cp inventory/secrets.enc.example inventory/secrets.enc
 - `relays.yml` — relays (реле-ноды)
 - `tgproxy.yml` — tgproxy (Telegram MTProxy)
 
-**`inventory/secrets.enc`** — пароли и секреты. Заполните значения, затем зашифруйте:
+**`inventory/secrets.enc`** — пароли и секреты. Заполните значения (в т.ч. `postgres_password`, `metrics_user`, `metrics_pass` для main), затем зашифруйте:
 
 ```bash
 ansible-vault encrypt inventory/secrets.enc
