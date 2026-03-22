@@ -28,12 +28,23 @@ Asgard Deploy — это набор Ansible playbook для автоматизи
 └─────────────────┘          └─────────────────┘          └─────────────────┘
 ```
 
-| Группа | Назначение |
-|--------|------------|
-| **main** | Центральный сервер: панель Remnawave, раздача конфигов подписчикам |
-| **relays** | VPN-реле: Hysteria, TUIC, Shadowsocks, Amnezia, OpenConnect (ocserv) |
-| **relay_minimal** | Минимальные relay (ex-hole): только remnanode, вход туннеля для двухзвенного VPN (клиент → hole → relay → интернет) |
-| **tgproxy** | MTProto-прокси для обхода блокировок Telegram |
+**Роли серверов:**
+
+- **`main`** — центральный сервер управления. Не принимает VPN-подключения от конечных клиентов, но выполняет функции координатора: хранение учётных записей пользователей, выдача подписок (списки URL для подключения), раздача конфигураций на роутеры и клиентские приложения. Принимает соединения от relay-нод и поставляет им конфигурации для X-Ray и sing-box.
+
+- **`relay`** — шлюз, принимающий VPN-подключения от пользователей. Поддерживаются протоколы на базе X-Ray/sing-box (VLESS, TUIC, Hysteria2, Shadowsocks), AmneziaWG и OpenConnect (ocserv).
+
+- **`tgproxy`** — отдельный узел с MTProto Proxy для обхода блокировок Telegram. Может быть связан туннелем с relay (в разработке).
+
+**Расширения Remnawave:**
+
+Remnawave базируется на ядре XRay. Протоколы TUIC, AmneziaWG и OpenConnect в нём не реализованы. Их поддержка добавлена за счёт дополнительных сервисов:
+
+- **`config-distributor`** — работает на main: принимает запросы от relay-нод и отдаёт им конфигурации для sing-box, AmneziaWG и ocserv.
+
+- **`node-agent`** — запускается на каждой relay-ноде параллельно с remnanode: получает конфигурации от config-distributor и применяет их (перезагрузка sing-box, синхронизация клиентов Amnezia, обновление пользователей ocserv).
+
+Эти сервисы можно отключить переменными `enable_config_distributor` и `enable_node_agent`, если используются только встроенные в Remnawave протоколы.
 
 ---
 
@@ -73,7 +84,7 @@ cp inventory/secrets.enc.example inventory/secrets.enc
 
 **`group_vars/`** — переменные по группам (порты, домены маскировки и т.д.):
 - `all.yml` — общие значения по умолчанию
-- `main.yml` — main; опционально: `enable_config_distributor`, `enable_ruleset_manager`
+- `main.yml` — main; опционально: `enable_config_distributor`, `enable_ruleset_manager`.
 - `relays.yml` — relays; опционально: `enable_ocserv`, `enable_amnezia`, `enable_warp`, `enable_sing_box`, `enable_pingtunnel`, `enable_node_agent`
 - `relay_minimal.yml` — минимальные relay (ex-hole): все `enable_*` отключены
 
@@ -213,11 +224,13 @@ deploy_gen3/
 
 ## 🔄 Типичный цикл деплоя
 
-1. **Новый VPS:** `./init_server.sh new-host --ask-pass`
-2. **Добавить в `hosts.yml`** с `ansible_port: 1122`
-3. **Сертификаты:** `./init_web_certs.sh new-host`
-4. **Деплой:** `./run_playbook.sh asgard_deploy_<main|relay|tgproxy>.yml -l new-host`
-5. **Периодически:** `./run_playbook.sh maintenance.yml`
+Для каждого нового сервера:
+
+1. **Добавить запись в `hosts.yml`**.
+2. **Начальная настройка:** `./init_server.sh new-host --ask-pass`
+2. **Web-сертификаты:** `./init_web_certs.sh new-host` (опционально для relay и tgproxy)
+3. **Деплой:** `./run_playbook.sh asgard_deploy_<main|relay|tgproxy>.yml -l new-host`
+4. **Периодически:** `./run_playbook.sh maintenance.yml`
 
 ---
 
