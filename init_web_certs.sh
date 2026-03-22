@@ -11,9 +11,7 @@ HOST=$1
 # Playbook для начальной настройки
 PLAYBOOK="setup_web_certs.yml"
 
-# Запускаем ansible-playbook
-./run_playbook.sh $ASK_PASS \
-    -l "$HOST" \
-    $PLAYBOOK
+# Запускаем ansible-playbook (vault pass запрашивается через run_playbook.sh)
+./run_playbook.sh -l "$HOST" "$PLAYBOOK"
 
 echo "Initial certificates installation completed for host $HOST"
