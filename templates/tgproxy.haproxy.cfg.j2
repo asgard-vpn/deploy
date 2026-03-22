@@ -7,7 +7,8 @@ frontend https
    bind 0.0.0.0:443 ssl crt /usr/local/etc/haproxy/certificates/
    mode http
    timeout client 300s
-  
+   http-response set-header Server "Web Server"
+
    http-request return status 403 content-type "text/html; charset=utf-8" file /web/403.html if !{ path -i / }
    http-request return status 200 content-type "text/html; charset=utf-8" file /web/index.html if { path -i / }
 

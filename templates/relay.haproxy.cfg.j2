@@ -45,9 +45,11 @@ backend ocserv
 {% endif %}
 backend http_403
    mode http
+   http-response set-header Server "Web Server"
    http-request return status 403 content-type "text/html; charset=utf-8" file /web/403.html
 
 backend http_index
    mode http
+   http-response set-header Server "Web Server"
    http-request return status 200 content-type "text/html; charset=utf-8" file /web/index.html
 

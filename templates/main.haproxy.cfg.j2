@@ -1,6 +1,7 @@
 defaults http
     option http-server-close
     option forwardfor
+    http-response set-header Server "Web Server"
     timeout connect 5s
     timeout client 30s
     timeout client-fin 30s
