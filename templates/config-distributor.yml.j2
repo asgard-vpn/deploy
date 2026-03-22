@@ -1,0 +1,69 @@
+# Config Distributor — конфигурация для сервиса распределения профилей по нодам
+# Документация: https://github.com/remnawave/config-distributor
+
+http:
+  endpoint: 0.0.0.0:8080
+  secret_token: {{ nodes_secret_token }}
+  webhook_secret: {{ webhook_secret }}
+
+panel:
+  url: https://{{ primary_domain }}/
+  subscriptions: http://remnawave-subscription-page:3001/subscriptions
+  token: {{ remnawave_api_token }}
+
+defaults:
+  routing_policy: except_ru
+  platform: router
+  service: singbox
+  url_resolver:
+    domain: {{ assets_domain }}
+
+templates:
+  directory: /opt/asgard/templates
+  vars:
+    hysteria_salamander_password: {{ hysteria_salamander_password }}
+    hysteria_port: 8443
+    tuic_port: {{ tuic_port }}
+    ss_port: {{ ss_port }}
+    ss_password: {{ ss_password }}
+    assets_domain: {{ assets_domain }}
+
+# Ноды берутся из inventory (группа relays). Для каждой ноды — сервисы и их параметры.
+nodes:
+{% for host in groups['relays'] %}
+  {{ host }}:
+    services:
+      sing-box:
+        template: sing-box.json.tmpl
+        vars:
+          hysteria_domain: {{ hostvars[host]['primary_domain'] }}
+      ocserv:
+        template: ocpasswd.tmpl
+        vars:
+{% if hostvars[host].get('ocserv_exclude_users') %}
+          exclude_users:
+{% for user in hostvars[host]['ocserv_exclude_users'] %}
+            - {{ user }}
+{% endfor %}
+{% endif %}
+      amnezia:
+        template: amnezia.tmpl
+
+{% endfor %}
+# Squads — привязка групп клиентов к нодам. node = hostname из groups.relays.
+# Для разных squads можно указать разные ноды (например, Gamers → relay-server-02).
+squads:
+  Routers:
+    - node: {{ groups['relays'][0] }}
+      service: sing-box
+      template: hysteria2.link.tmpl
+      clients:
+        - sing-box
+      vars:
+  Gamers:
+    - node: {{ groups['relays'][0] }}
+      service: sing-box
+      template: hysteria2.link.tmpl
+      clients:
+        - sing-box
+      vars:

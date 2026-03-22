@@ -1,0 +1,9 @@
+{
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "1m",
+        "max-file": "1",
+        "labels": "production_status",
+        "env": "os,customer"
+    }
+}

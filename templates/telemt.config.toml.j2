@@ -1,0 +1,40 @@
+# === General Settings ===
+[general]
+
+[general.modes]
+classic = false
+secure = false
+tls = true
+
+# === Anti-Censorship & Masking ===
+[censorship]
+mask = true
+{% if self_steal | default(false) %}
+tls_domain = "{{ primary_domain }}"
+mask_host = "gateway"
+{% else %}
+tls_domain = "{{ mtproto_camouflage_domain }}"
+mask_host = "{{ mtproto_camouflage_domain }}"
+{% endif %}
+mask_port = 443
+tls_emulation = true        # Fetch real cert lengths and emulate TLS records
+tls_front_dir = "tlsfront"   # Cache directory for TLS emulation
+
+[access.users]
+user = "{{ mtproto_secret }}"
+
+[general.links]
+show = "*"
+public_host = "{{ primary_domain }}"
+
+[server]
+port = 443
+
+[[server.listeners]]
+ip = "0.0.0.0"
+
+#[[upstreams]]
+#type = "socks5"
+#address = "sing-box:1080"
+#weight = 1
+#enabled = true

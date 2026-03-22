@@ -1,0 +1,30 @@
+- name: Deploy Node Config
+  hosts: main
+  become: true
+  become_method: ansible.builtin.sudo
+
+  tasks:
+    - name: Copy templates
+      ansible.builtin.copy:
+        src: asgard/main/templates/
+        force: true
+        dest: "/opt/asgard/templates"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Setup config distributor
+      ansible.builtin.template:
+        src: templates/config-distributor.yml.j2
+        dest: /opt/asgard/config-distributor.yml
+        mode: "0600"
+        owner: root
+        group: root
+
+    - name: Restart Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        services:
+          - config-distributor
+        state: restarted
+

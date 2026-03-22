@@ -1,0 +1,90 @@
+- name: Deploy Main Server
+  hosts: main
+  become: true
+  become_method: ansible.builtin.sudo
+  roles:
+    - kwoodson.yedit
+
+  tasks:
+    - name: Copy compose Asgard files
+      ansible.builtin.copy:
+        src: asgard/main/
+        force: true
+        dest: "/opt/asgard"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Setup update certs script
+      ansible.builtin.template:
+        src: templates/main.update_certs.sh.j2
+        dest: /opt/asgard/update_certs.sh
+        mode: "0744"
+        owner: root
+        group: root
+
+    # - name: Make scripts executable
+    #   ansible.builtin.file:
+    #     name: "{{ item }}"
+    #     mode: a+x
+    #   loop:
+    #     - /opt/asgard/update_certs.sh
+
+    - name: Set environment
+      ansible.builtin.copy:
+        dest: /opt/asgard/.env
+        mode: "0644"
+        content: |
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=postgres
+          REMNAWAVE_PANEL_URL=https://{{ primary_domain }}
+
+    - name: Setup HaProxy config
+      ansible.builtin.template:
+        src: templates/main.haproxy.cfg.j2
+        dest: /opt/asgard/gateway/haproxy.cfg
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Setup Remnawave environement
+      ansible.builtin.template:
+        src: templates/remnawave.env.j2
+        dest: /opt/asgard/remnawave.env
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Setup config distributor
+      ansible.builtin.template:
+        src: templates/config-distributor.yml.j2
+        dest: /opt/asgard/config-distributor.yml
+        mode: "0600"
+        owner: root
+        group: root
+
+    - name: Make certs inaccessible
+      ansible.builtin.file:
+        name: /opt/asgard/certs
+        mode: "0600"
+        recurse: true
+
+    - name: Start Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+
+    - name: Restart Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+        state: restarted
+
+    - name: Add cert convert tasks to cron
+      ansible.builtin.cron:
+        name: convert cets
+        day: '*'
+        hour: 1
+        minute: 0
+        job: /opt/asgard/update_certs.sh

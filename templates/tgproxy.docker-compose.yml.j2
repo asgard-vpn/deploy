@@ -1,0 +1,53 @@
+services:
+# TODO: tunnel
+#    sing-box:
+#        image: ghcr.io/sagernet/sing-box:v1.13.2
+#        container_name: sing-box
+#        restart: always
+#        volumes:
+#            - ./sing-box:/etc/sing-box
+#        command: -D /var/lib/sing-box -c /etc/sing-box/config.json run
+
+    telemt:
+        image: ghcr.io/telemt/telemt:3.3.22
+        container_name: telemt
+        restart: always
+        # Allow caching 'proxy-secret' in read-only container
+        working_dir: /run/telemt
+        volumes:
+            - ./telemt/config.toml:/run/telemt/config.toml:ro
+        tmpfs:
+            - /run/telemt:rw,mode=1777,size=1m
+        environment:
+            - RUST_LOG=info
+        cap_drop:
+            - ALL
+{% if self_steal | default(false) %}
+        depends_on:
+            - gateway
+{% endif %}
+ #       depends_on:
+ #           - sing-box
+        cap_add:
+            - NET_BIND_SERVICE   # allow binding to port 443
+        read_only: true
+        security_opt:
+            - no-new-privileges:true
+        ports:
+            - "443:443"
+        ulimits:
+            nofile:
+                soft: 65536
+                hard: 65536
+
+{% if self_steal | default(false) %}
+    gateway:
+        image: "haproxy:3.0.4-alpine"
+        container_name: gateway
+        restart: "always"
+        volumes:
+        - ./gateway/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+        - ./fallback:/web:ro
+        - ./certs:/usr/local/etc/haproxy/certificates:ro
+        user: root
+{% endif %}

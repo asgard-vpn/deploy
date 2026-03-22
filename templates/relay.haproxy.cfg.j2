@@ -1,0 +1,49 @@
+defaults
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout tunnel 2147483647ms
+
+frontend https
+   bind 0.0.0.0:443
+   mode tcp
+   tcp-request inspect-delay 5s
+   timeout client 300s
+   tcp-request content accept if { req_ssl_hello_type 1 }
+
+   #use_backend mtproto if { req_ssl_sni -i {{ mtproto_camouflage_domain }} }
+   use_backend ocserv if { req_ssl_sni -i {{ ocserv_domain }} }
+
+   default_backend remnanode
+
+frontend http_camouflage
+    bind 0.0.0.0:80
+    mode http
+
+    acl is_root path -i /
+    use_backend http_index if is_root
+    default_backend http_403
+
+backend remnanode
+   mode tcp
+   option ssl-hello-chk
+   server remnanode remnanode:443
+
+#backend mtproto
+#   mode tcp
+#   option ssl-hello-chk
+#   server mtproto mtproto:8889
+
+backend ocserv
+   mode tcp
+   option ssl-hello-chk
+   server ocserv ocserv:443 send-proxy-v2
+
+backend http_403
+   mode http
+   http-request return status 403 content-type "text/html; charset=utf-8" file /web/403.html
+
+backend http_index
+   mode http
+   http-request return status 200 content-type "text/html; charset=utf-8" file /web/index.html
+

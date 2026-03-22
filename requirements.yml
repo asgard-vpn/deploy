@@ -1,0 +1,11 @@
+---
+# Ansible Galaxy requirements
+# Установка: ansible-galaxy install -r requirements.yml
+
+collections:
+  - name: community.docker
+  - name: community.general
+
+roles:
+  - name: geerlingguy.certbot
+  - name: kwoodson.yedit

@@ -1,0 +1,213 @@
+- name: Initial Server Setup
+  hosts: all
+  become: true
+  become_method: ansible.builtin.sudo
+  vars:
+    ssh_port: 1122
+
+  tasks:
+    - name: Get current date and time
+      ansible.builtin.shell: date +"%Y%m%d"
+      register: datetime
+
+    - name: Set current date and time
+      ansible.builtin.set_fact:
+        cur_date: "{{ datetime.stdout }}"
+
+    - name: Set Host Name
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname_short }}"
+
+    - name: Add FQDN to /etc/hosts
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: '127.0.1.1 {{ inventory_hostname }} {{ inventory_hostname_short }}'
+        state: present
+
+    - name: Create a new regular user with sudo privileges
+      ansible.builtin.user:
+        name: admin
+        state: present
+        groups: sudo
+        append: true
+        shell: /bin/bash
+        password: "{{ asgard_admin_password | password_hash('sha512') }}"
+        create_home: true
+
+    - name: Disable password authentication for root
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin prohibit-password'
+
+    - name: Update apt package cache
+      ansible.builtin.apt:
+        update_cache: true
+        force_apt_get: true
+        cache_valid_time: 3600
+
+    - name: Upgrade installed apt packages
+      ansible.builtin.apt:
+        upgrade: true
+        force_apt_get: true
+      register: upgrade
+
+    - name: Install required system packages
+      ansible.builtin.apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+          - fail2ban
+          - rkhunter
+          - snapd
+          - ufw
+          - logrotate
+        update_cache: true
+
+    - name: Configure max journal size persistent
+      community.general.ini_file:
+        path: "/etc/systemd/journald.conf"
+        section: "Journal"
+        option: "SystemMaxUse"
+        value: "10M"
+        state: present
+        mode: "0644"
+
+    - name: Configure max journal in-memory size
+      community.general.ini_file:
+        path: "/etc/systemd/journald.conf"
+        section: "Journal"
+        option: "RuntimeMaxUse"
+        value: "40M"
+        state: present
+        mode: "0644"
+
+    - name: Set the ssh '{{ ssh_port }}' port number in sshd_config.
+      ansible.builtin.lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#Port '
+        line: 'Port {{ ssh_port }}'
+        state: present
+
+    - name: Disable and reset ufw firewall to installation defaults
+      community.general.ufw:
+        state: reset
+
+    - name: Restart the ssh service after updating the SSH port number
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: Change SSH port value in the Ansible
+      ansible.builtin.set_fact:
+        ansible_port: "{{ ssh_port }}"
+
+    - name: Allow ssh port '{{ ssh_port }}'.
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: '{{ ssh_port }}'
+        state: enabled
+
+    - name: Allow port 80
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: 80
+        state: enabled
+
+    - name: Allow port 443
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: 443
+        state: enabled
+
+    - name: Configure fail2ban
+      ansible.builtin.copy:
+        content: "{{ lookup('file', 'jail/custom.conf') }}"
+        dest: "/etc/fail2ban/jail.d/custom.conf"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Enable fail2ban service on boot
+      ansible.builtin.service:
+        name: fail2ban
+        enabled: true
+        state: started
+
+    - name: Set timezone
+      community.general.timezone:
+        name: UTC
+
+    - name: Add Docker repository key.
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/ubuntu/gpg"
+        dest: /etc/apt/trusted.gpg.d/docker.asc
+        mode: '0644'
+        force: true
+
+    - name: Add Docker Repository
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: Update apt and install Docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-compose
+          - docker-compose-plugin
+        update_cache: true
+
+    - name: Install Docker Module for Python
+      ansible.builtin.pip:
+        name: docker
+
+    - name: Add user to Docker group
+      ansible.builtin.user:
+        name: admin
+        append: true
+        groups: docker
+
+    - name: Configure docker daemon
+      ansible.builtin.copy:
+        content: "{{ lookup('file', 'docker/daemon.json') }}"
+        dest: "/etc/docker/daemon.json"
+        mode: "0644"
+
+    - name: Remove old packages from the cache
+      ansible.builtin.apt:
+        autoclean: true
+
+    - name: Remove dependencies that are no longer needed
+      ansible.builtin.apt:
+        autoremove: true
+        purge: true
+
+    - name: Reload daemons
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Check if a reboot is needed
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot the server if needed
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible because of reboot required file."
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami
+      when: reboot_required.stat.exists

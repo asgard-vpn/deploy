@@ -1,0 +1,82 @@
+- name: Deploy Holes
+  hosts: holes
+  become: true
+  become_method: ansible.builtin.sudo
+
+  tasks:
+    - name: Copy compose Asgard files
+      ansible.builtin.copy:
+        src: asgard/hole/
+        force: true
+        dest: "/opt/asgard"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Setup Environment
+      ansible.builtin.template:
+        src: templates/hole.env.j2
+        dest: /opt/asgard/.env
+        mode: "0600"
+        owner: root
+        group: root
+
+
+    - name: Allow node port
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: "{{ remnawave_app_port }}"
+        state: enabled
+  
+    - name: Setup logrotate
+      ansible.builtin.copy:
+        dest: /etc/logrotate.d/remnanode
+        mode: "0644"
+        content: |
+          /var/log/remnanode/*.log {
+                size 10M
+                rotate 5
+                compress
+                missingok
+                notifempty
+                copytruncate
+            }
+
+    - name: Open UDP ports
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: udp
+        state: enabled
+      loop:
+        - 443
+
+    - name: Open TCP ports
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+        state: enabled
+      loop:
+        - 443
+
+    - name: Deploy Docker Compose
+      ansible.builtin.template:
+        src: templates/hole.docker-compose.yml.j2
+        dest: /opt/asgard/docker-compose.yml
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Start Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+
+    - name: Restart Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+        state: restarted
+

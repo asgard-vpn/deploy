@@ -1,0 +1,99 @@
+# Скопируйте этот файл в hosts.yml и настройте под свою инфраструктуру
+# cp inventory/hosts.yml.example inventory/hosts.yml
+
+main:
+  hosts:
+    main-server-01:
+      ansible_host: 192.168.1.10
+      ansible_user: admin
+      ansible_port: 1122
+      ansible_password: "{{ asgard_main_password }}"
+      ansible_sudo_pass: "{{ asgard_main_password }}"
+      primary_domain: main.example.com
+      subscription_domain: sub.example.com
+      assets_domain: assets.example.com
+      public_domains:
+        - "{{ primary_domain }}"
+        - "{{ subscription_domain }}"
+        - "{{ assets_domain }}"
+  vars:
+    asgard_admin_password: "{{ asgard_main_password }}"
+    # ocserv_domain: ""  # опционально: домен ocserv, чьи серты не мержить (если main хранит серты relay-серверов)
+    hysteria_port: 2053
+    tuic_port: 9443
+    ss_port: 9008
+    ss_password: "{{ ss_password }}"
+
+relays:
+  hosts:
+    relay-server-01:
+      ansible_host: 192.168.1.20
+      ansible_user: admin
+      ansible_port: 1122
+      ansible_password: "{{ asgard_relay_password }}"
+      ansible_sudo_pass: "{{ asgard_relay_password }}"
+      primary_domain: relay1.example.com
+      ocserv_domain: ocserv1.example.com
+      use_reverse_proxy: true
+      # ocserv_exclude_users: []  # опционально: юзеры с ручными записями в ocpasswd (не генерировать)
+      public_domains:
+        - "{{ primary_domain }}"
+        - "{{ ocserv_domain }}"
+
+    # relay-server-02:
+    #   ansible_host: 192.168.1.21
+    #   ansible_user: admin
+    #   ansible_port: 1122
+    #   ansible_password: "{{ asgard_relay_password }}"
+    #   ansible_sudo_pass: "{{ asgard_relay_password }}"
+    #   primary_domain: relay2.example.com
+    #   ocserv_domain: ocserv2.example.com
+    #   ocserv_exclude_users: [admin, vpn-user]  # если нужны ручные записи
+    #   public_domains:
+    #     - "{{ primary_domain }}"
+    #     - "{{ ocserv_domain }}"
+
+  vars:
+    asgard_admin_password: "{{ asgard_relay_password }}"
+    use_reverse_proxy: true  # default for relay group
+    remnawave_app_port: 8717
+    mtproto_camouflage_domain: www.example.org
+    hysteria_port: 8443
+    tuic_port: 9443
+    ss_port: 9008
+    amnezia_port: 27015
+    main_node_domain: assets.example.com
+
+tgproxy:
+  hosts:
+    tgproxy-server-01:
+      ansible_host: 192.168.1.30
+      ansible_user: admin
+      ansible_port: 1122
+      ansible_password: "{{ asgard_relay_password }}"
+      ansible_sudo_pass: "{{ asgard_relay_password }}"
+      primary_domain: tgproxy1.example.com
+      mtproto_camouflage_domain: www.example.org
+      mtproto_secret: "{{ mtproto_secret }}"
+      self_steal: false
+      public_domains:
+        - "{{ primary_domain }}"
+
+  vars:
+    asgard_admin_password: "{{ asgard_relay_password }}"
+
+holes:
+  hosts:
+    hole-server-01:
+      ansible_host: 192.168.1.40
+      ansible_user: admin
+      ansible_port: 1122
+      ansible_password: "{{ asgard_relay_password }}"
+      ansible_sudo_pass: "{{ asgard_relay_password }}"
+      primary_domain: hole1.example.com
+      public_domains:
+        - "{{ primary_domain }}"
+
+  vars:
+    asgard_admin_password: "{{ asgard_relay_password }}"
+    remnawave_app_port: 8717

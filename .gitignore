@@ -1,0 +1,10 @@
+.ansible
+.ansible.bak
+backup
+rkhunter
+
+# Секреты и инвентарь (см. *\.example)
+inventory/secrets.enc
+inventory/secrets.enc.yml
+inventory/hosts.yml
+

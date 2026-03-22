@@ -1,0 +1,66 @@
+- name: Maintenance Asgard servers
+  hosts: all
+  become: true
+  become_method: ansible.builtin.sudo
+
+  tasks:
+    - name: Fix RkHunter config 1
+      ansible.builtin.lineinfile:
+        path: /etc/rkhunter.conf
+        regexp: '^WEB_CMD="/bin/false"'
+        line: 'WEBCMD=""'
+        state: present
+
+    - name: Fix RkHunter config 2
+      ansible.builtin.lineinfile:
+        path: /etc/rkhunter.conf
+        regexp: '^MIRRORS_MODE=1'
+        line: 'MIRRORS_MODE=0'
+        state: present
+
+    - name: Fix RkHunter config 3
+      ansible.builtin.lineinfile:
+        path: /etc/rkhunter.conf
+        regexp: '^UPDATE_MIRRORS=0'
+        line: 'UPDATE_MIRRORS=1'
+        state: present
+
+    - name: Update rootkit databases
+      ansible.builtin.shell:
+        cmd: rkhunter --update
+      ignore_errors: true
+
+    - name: Check system to rootkits
+      ansible.builtin.shell:
+        cmd: rkhunter --check --sk
+      register: rkhunter_report
+      ignore_errors: true
+
+    - name: Fetch report
+      ansible.builtin.fetch:
+        src: /var/log/rkhunter.log
+        dest: rkhunter
+
+    - name: Upgrade system
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: full
+
+    - name: RkHunter update props
+      ansible.builtin.shell:
+        cmd: rkhunter --propupd
+
+    - name: Check if a reboot is needed
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot the server if needed
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible because of reboot required file."
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami
+      when: reboot_required.stat.exists

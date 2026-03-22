@@ -1,0 +1,86 @@
+- name: Deploy Mtproto Server
+  hosts: tgproxy
+  become: true
+  become_method: ansible.builtin.sudo
+
+  tasks:
+    - name: Copy compose Asgard files
+      ansible.builtin.copy:
+        src: asgard/tgproxy/
+        force: true
+        dest: "/opt/asgard"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Make scripts executable
+      ansible.builtin.file:
+        name: "{{ item }}"
+        mode: a+x
+      loop:
+        - /opt/asgard/update_certs.sh
+
+    - name: Setup Telemt config
+      ansible.builtin.template:
+        src: templates/telemt.config.toml.j2
+        dest: /opt/asgard/telemt/config.toml
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Setup Haproxy fallback
+      ansible.builtin.template:
+        src: templates/tgproxy.haproxy.cfg.j2
+        dest: /opt/asgard/gateway/haproxy.cfg
+        mode: "0644"
+        owner: root
+        group: root
+      when:
+        - self_steal | default(false) | bool
+    
+    # TODO: tunnel
+    # - name: Setup sing-box config
+    #   ansible.builtin.template:
+    #     src: templates/hole.sing-box.json.j2
+    #     dest: /opt/asgard/sing-box/config.json
+    #     mode: "0644"
+    #     owner: root
+    #     group: root
+
+    - name: Open TCP ports
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+        state: enabled
+      loop:
+        - 443
+
+    - name: Deploy Docker Compose
+      ansible.builtin.template:
+        src: templates/tgproxy.docker-compose.yml.j2
+        dest: /opt/asgard/docker-compose.yml
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Start Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+
+    - name: Restart Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+        state: restarted
+
+    - name: Add cert convert tasks to cron
+      ansible.builtin.cron:
+        name: convert cets
+        day: '*'
+        hour: 1
+        minute: 0
+        job: /opt/asgard/update_certs.sh
+      when:
+        - self_steal | default(false) | bool

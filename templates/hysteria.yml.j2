@@ -1,0 +1,48 @@
+listen: 0.0.0.0:443
+
+tls:
+    cert: /etc/certs/live/{{ primary_domain }}/fullchain.pem
+    key: /etc/certs/live/{{ primary_domain }}/privkey.pem
+
+speedTest: false
+
+auth:
+    type: userpass
+    userpass:
+      user: {{ hysteria_password }}
+
+masquerade: 
+  type: file
+  file:
+    dir: /www/html
+
+obfs:
+  type: salamander 
+  salamander:
+    password: {{ hysteria_salamander_password }}
+
+outbounds:
+  - name: freedom
+    type: direct
+  - name: warp
+    type: socks5
+    socks5:
+      addr: warp:1080
+
+sniff:
+  enable: true 
+  timeout: 2s 
+  rewriteDomain: false 
+  tcpPorts: 80,443,8000-9000
+
+acl:
+  inline:
+    - reject(geoip:private)
+    - warp(geoip:ru)
+    - warp(suffix:.ru)
+    - warp(suffix:.рф)
+    - warp(suffix:.su)
+    - warp(geosite:ru-available-only-inside)
+    - freedom(all)
+  geoip: /geo/geoip_RU.dat
+  geosite: /geo/geosite_RU.dat

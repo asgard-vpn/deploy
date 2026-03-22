@@ -1,0 +1,65 @@
+defaults http
+    option http-server-close
+    option forwardfor
+    timeout connect 5s
+    timeout client 30s
+    timeout client-fin 30s
+    timeout server 30s
+    timeout tunnel 2147483647ms
+
+frontend https
+   mode http
+   bind 0.0.0.0:443 ssl crt /usr/local/etc/haproxy/certificates/ strict-sni alpn h2,http/1.1
+   http-request set-header X-Forwarded-Proto https if { ssl_fc }
+   http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+   http-request set-header X-Forwarded-For %[src]
+
+   use_backend remnawave if { hdr(host) -i {{ primary_domain }} }
+   use_backend config_distributor if { hdr(host) -i {{ subscription_domain }} }
+
+   # Обработка ассетов
+   acl host_assets hdr(host) -i {{ assets_domain }}
+   acl is_ruleset path_beg /ruleset
+   acl is_config path_beg /config
+   acl is_script path_beg /script
+   acl is_nodes path_beg /nodes
+   acl is_webhook path_beg /webhook
+   use_backend ruleset_manager if host_assets is_ruleset
+   use_backend config_distributor if host_assets is_config
+   use_backend config_distributor if host_assets is_script
+   use_backend config_distributor if host_assets is_nodes
+   use_backend config_distributor if host_assets is_webhook
+
+   # WebSocket обработка
+   http-request set-header X-Real-IP %[src]
+   http-request set-header Host %[req.hdr(Host)]
+
+    # Upgrade заголовки для WebSocket
+   acl is_websocket hdr(Upgrade) -i WebSocket
+   acl is_websocket hdr_beg(Connection) -i Upgrade
+   http-request set-header Connection "upgrade" if is_websocket
+   http-request set-header Upgrade "%[req.hdr(Upgrade)]" if is_websocket
+
+   default_backend deny_all
+
+backend remnawave
+   mode http
+   option forwarded
+   option forwardfor
+   server remnawave remnawave:3000
+
+backend ruleset_manager
+    mode http
+    http-request replace-path ^/ruleset(/.*)$ \1
+    server ruleset_manager ruleset-manager:8080
+
+backend config_distributor
+    mode http
+    option forwarded
+    option forwardfor
+    server config_distributor config-distributor:8080
+
+backend deny_all
+    mode http
+    http-request deny
+

@@ -1,0 +1,23 @@
+main:
+  url: wss://{{ main_node_domain }}/nodes/{{ inventory_hostname }}/ws
+  token: {{ nodes_secret_token }}
+
+node:
+{% if use_reverse_proxy | default(true) %}
+  ocserv_url: https://{{ ocserv_domain }}/
+{% endif %}
+  services:
+    sing-box:
+      config_path: /etc/sing-box/config.json
+      container_name: sing-box
+      action: reload
+{% if use_reverse_proxy | default(true) %}
+    ocserv:
+      config_path: /etc/ocserv/ocpasswd
+      container_name: ocserv
+      action: restart
+{% endif %}
+    amnezia:
+      config_path: /etc/amnezia/clients
+      container_name: amnezia
+      action: amnezia-sync

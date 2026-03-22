@@ -1,0 +1,1 @@
+ss://2022-blake3-aes-256-gcm:{{ .Vars.ss_password}}:{{ base64Encode .User.SsPassword }}@{{ .Vars.hysteria_domain }}:443/?plugin=shadow-tls;host={{ .Vars.shadowtls_camouflage_domain }};password={{ .User.SsPassword }};version=3#{{ .User.Username }}

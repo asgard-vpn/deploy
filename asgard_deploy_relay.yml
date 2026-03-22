@@ -1,0 +1,181 @@
+- name: Deploy Relay
+  hosts: relays
+  become: true
+  become_method: ansible.builtin.sudo
+
+  tasks:
+    - name: Copy compose Asgard files
+      ansible.builtin.copy:
+        src: asgard/relay/
+        force: true
+        dest: "/opt/asgard"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Setup docker-compose
+      ansible.builtin.template:
+        src: templates/relay.docker-compose.yml.j2
+        dest: /opt/asgard/docker-compose.yml
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Make scripts executable
+      ansible.builtin.file:
+        name: "{{ item }}"
+        mode: a+x
+      loop:
+        - /opt/asgard/amnezia/init.sh
+
+    - name: Setup Environment
+      ansible.builtin.template:
+        src: templates/relay.env.j2
+        dest: /opt/asgard/.env
+        mode: "0600"
+        owner: root
+        group: root
+
+    - name: Setup Amnezia Env
+      ansible.builtin.template:
+        src: templates/relay.amnezia.env.example.j2
+        dest: /opt/asgard/amnezia/amnezia.env.example
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Setup HaProxy config
+      ansible.builtin.template:
+        src: templates/relay.haproxy.cfg.j2
+        dest: /opt/asgard/gateway/haproxy.cfg
+        mode: "0644"
+        owner: root
+        group: root
+      when: use_reverse_proxy | default(true) | bool
+
+    - name: Setup cert update script
+      ansible.builtin.template:
+        src: templates/relay.update_certs.sh.j2
+        dest: /opt/asgard/update_certs.sh
+        mode: "0744"
+        owner: root
+        group: root
+
+    - name: Setup OpenConnect config
+      ansible.builtin.template:
+        src: templates/relay.ocserv.conf.j2
+        dest: /opt/asgard/ocserv/config/ocserv.conf
+        mode: "0644"
+        owner: root
+        group: root
+      when: use_reverse_proxy | default(true) | bool
+
+    - name: Make certs inaccessible
+      ansible.builtin.file:
+        name: /opt/asgard/remnanode_certs
+        mode: "0600"
+        recurse: true
+
+    - name: Allow node port
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: "{{ remnawave_app_port }}"
+        state: enabled
+
+    - name: Download latest Geoip database
+      ansible.builtin.get_url:
+        url: "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat"
+        dest: /opt/asgard/geo/geoip_RU.dat
+        mode: '0644'
+        force: true
+
+    - name: Download latest Geosite database
+      ansible.builtin.get_url:
+        url: "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat"
+        dest: /opt/asgard/geo/geosite_RU.dat
+        mode: '0644'
+        force: true
+
+    - name: Setup logrotate
+      ansible.builtin.copy:
+        dest: /etc/logrotate.d/remnanode
+        mode: "0644"
+        content: |
+          /var/log/remnanode/*.log {
+                size 10M
+                rotate 5
+                compress
+                missingok
+                notifempty
+                copytruncate
+            }
+
+    - name: Copy MTProto Proxy files
+      ansible.builtin.copy:
+        src: mtproxy
+        force: true
+        dest: "/opt/asgard"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Open UDP ports
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: udp
+        state: enabled
+      loop:
+        - "{{ hysteria_port }}"
+        - "{{ tuic_port }}"
+        - "{{ ss_port }}"
+        - "{{ amnezia_port }}"
+        - 443
+
+    - name: Open TCP ports
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+        state: enabled
+      loop:
+        - "{{ ss_port }}"
+        - 443
+
+    - name: Setup Node Agent config
+      ansible.builtin.template:
+        src: templates/node-agent.yaml.j2
+        dest: /opt/asgard/node-agent.yaml
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Check Amnezia is initialized
+      ansible.builtin.stat:
+        path: /opt/asgard/amnezia/amnezia.env
+      register: amnezia_initialized
+
+    - name: Setup Amnezia config
+      ansible.builtin.shell:
+        /opt/asgard/amnezia/init.sh
+      when: not amnezia_initialized.stat.exists
+
+    - name: Start Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+
+    - name: Restart Asgard services
+      community.docker.docker_compose_v2:
+        project_src: /opt/asgard
+        remove_orphans: true
+        state: restarted
+
+    - name: Add cert convert tasks to cron
+      ansible.builtin.cron:
+        name: convert cets
+        day: '*'
+        hour: 1
+        minute: 0
+        job: /opt/asgard/update_certs.sh

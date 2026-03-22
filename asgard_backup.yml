@@ -1,0 +1,39 @@
+- name: Backup Asgard data
+  hosts: all
+  become: true
+  become_method: ansible.builtin.sudo
+
+  tasks:
+    - name: Find Docker volumes
+      ansible.builtin.find:
+        paths: /var/lib/docker/volumes/
+        file_type: directory
+      register: volumes
+
+    - name: Create directory list
+      ansible.builtin.set_fact:
+        backup_directories: []
+
+    - name: Extend directory list
+      ansible.builtin.set_fact:
+        backup_directories: "{{ backup_directories + [item.path] }}"
+      loop: "{{ volumes.files }}"
+
+    - name: Print registered directories
+      ansible.builtin.debug:
+        var: item
+      loop: "{{ backup_directories }}"
+
+    - name: Create backup archive
+      community.general.archive:
+        path: "{{ backup_directories }}"
+        dest: "/opt/backup.tar.gz"
+        mode: "0600"
+        owner: root
+        group: root
+
+    - name: Download backup
+      ansible.builtin.fetch:
+        src: "/opt/backup.tar.gz"
+        dest: "backup/{{ inventory_hostname }}/{{ now(utc=true, fmt='%Y_%m_%d') }}.tar.gz"
+        flat: true

@@ -1,0 +1,82 @@
+http:
+  endpoint: 0.0.0.0:8080
+directories:
+  rulesets: /usr/local/share/rulesets
+sources:
+  # blocked in Russia
+  antizapret: https://github.com/savely-krasovsky/antizapret-sing-box/releases/latest/download/antizapret.srs
+  re-filter: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/re-filter.srs
+  ru-bundle: https://github.com/legiz-ru/sb-rule-sets/raw/main/ru-bundle.srs
+  ru-blocked: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/ru-blocked.srs
+  ru-blocked-community: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/ru-blocked-community.srs
+  
+  # blocked by foreign services
+  no-russia-hosts: https://github.com/legiz-ru/sb-rule-sets/raw/main/no-russia-hosts.srs
+
+  # services
+  cloudflare: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/cloudflare.srs
+  cloudfront: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/cloudfront.srs
+  google: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/google.srs
+  xbox: https://github.com/tangnahuaite/sing-box_Route-rules/raw/refs/heads/main/rule_srs/Xbox.srs
+  telegram: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/telegram.srs
+  discord: https://github.com/legiz-ru/sb-rule-sets/raw/main/discord-voice-ip-list.srs
+
+  # location RU
+  geoip-ru: https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-ru.srs
+  yandex: https://raw.githubusercontent.com/runetfreedom/russia-blocked-geoip/release/srs/yandex.srs
+
+rulesets:
+  blocked:
+    merge:
+      - antizapret
+    extra:
+      domain_suffixes:
+        - cloudflare-ech.com
+        - cloudflare-dns.com
+        - cloudflare.com
+
+  # blocked_ext:
+  #   merge:
+  #     - antizapret
+  #     - cloudflare
+  #     - re-filter
+  #     - ru-bundle
+  #     - ru-blocked
+  #     - ru-blocked-community
+
+  blocked_ru:
+    subset:
+      domain_suffixes:
+        - ru
+        - su
+        - рф
+      sources:
+        - antizapret
+        - re-filter
+        - ru-bundle
+        - ru-blocked
+        - ru-blocked-community
+
+  foreign:
+    merge:
+      - no-russia-hosts
+      - google
+      - telegram
+    extra:
+      domains:
+        - grok.com 
+  
+  # foreign_ext:
+  #   merge:
+  #     - no-russia-hosts
+  #     - google
+  #     - cloudflare
+  #     - cloudfront
+  #     - xbox
+  #     - telegram
+  #     - discord
+
+  location_ru:
+    merge:
+      - geoip-ru
+      - yandex

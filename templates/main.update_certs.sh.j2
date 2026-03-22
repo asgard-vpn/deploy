@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Домен ocserv (если есть) — его серты не мержим, т.к. ocserv использует их отдельно
+OCSERV_DOMAIN="{{ ocserv_domain | default('') }}"
+
+for d in /etc/letsencrypt/live/*/; do
+    domain=`basename $d`
+    if [ "$domain" != "$OCSERV_DOMAIN" ]; then
+        cat $d/fullchain.pem $d/privkey.pem > /opt/asgard/certs/$domain.pem
+    fi
+done

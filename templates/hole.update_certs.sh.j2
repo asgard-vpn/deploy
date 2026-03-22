@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for d in /etc/letsencrypt/live/*/; do
+    domain=`basename $d`
+    cat $d/fullchain.pem $d/privkey.pem > /opt/asgard/certs/$domain.pem
+done
+
+openssl pkey -in /etc/letsencrypt/live/{{ primary_domain }}/privkey.pem -out /opt/asgard/remnanode_certs/privkey.key
+cp /etc/letsencrypt/live/{{ primary_domain }}/fullchain.pem /opt/asgard/remnanode_certs/fullchain.pem
