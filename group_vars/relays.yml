@@ -9,6 +9,8 @@ enable_warp: true
 enable_sing_box: true
 enable_pingtunnel: true
 enable_node_agent: true
+enable_vk_turn_tunnel: false
+
 
 # Маскировка MTProxy под легитимный домен
 mtproto_camouflage_domain: www.example.org
@@ -22,4 +24,9 @@ asgard_logrotate_enabled: true
 # Роль asgard_ufw (порты зависят от включённых сервисов)
 asgard_ufw_allow_node_port: true
 asgard_ufw_tcp_ports: "{{ ([ss_port] if enable_sing_box | default(true) | bool else []) + [443] }}"
-asgard_ufw_udp_ports: "{{ ([hysteria_port, tuic_port, ss_port] if enable_sing_box | default(true) | bool else []) + ([amnezia_port] if enable_amnezia | default(true) | bool else []) + [443] }}"
+
+# UDP: sing-box (Hysteria, TUIC, SS) + Amnezia + 443 + VK turn tunnel (если включён)
+_asgard_ufw_udp_sing_box: "{{ [hysteria_port, tuic_port, ss_port] if enable_sing_box | default(true) | bool else [] }}"
+_asgard_ufw_udp_amnezia: "{{ [amnezia_port] if enable_amnezia | default(true) | bool else [] }}"
+_asgard_ufw_udp_vk_tunnel: "{{ [vk_turn_tunnel_port] if enable_vk_turn_tunnel | default(false) | bool else [] }}"
+asgard_ufw_udp_ports: "{{ _asgard_ufw_udp_sing_box + _asgard_ufw_udp_amnezia + [443] + _asgard_ufw_udp_vk_tunnel }}"

@@ -130,6 +130,18 @@ services:
             retries: 3
 
 {% endif %}
+
+{% if enable_vk_turn_tunnel | default(false) | bool %}
+    vk_turn_tunnel:
+        image: asgardvpn/vk-turn-tunnel:v1.0.0
+        container_name: vk_turn_tunnel
+        restart: always
+        ports:
+            - "${VK_TURN_TUNNEL_PORT}:56000/udp"
+        environment:
+            - CONNECT_ADDR=sing-box:8443
+{% endif %}
+
 {% if enable_node_agent | default(true) | bool %}
     node-agent:
         image: asgardvpn/node-agent:v1.2.0

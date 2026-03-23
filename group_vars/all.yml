@@ -13,3 +13,4 @@ tuic_port: 9443
 ss_port: 9008
 amnezia_port: 27015
 remnawave_app_port: 8717
+vk_turn_tunnel_port: 56000
