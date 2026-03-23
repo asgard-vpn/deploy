@@ -9,6 +9,7 @@
   register: custom_fallback_index
   delegate_to: localhost
   run_once: true
+  become: false
   ignore_errors: true
 
 - name: Check for custom fallback 403 in inventory
@@ -17,6 +18,7 @@
   register: custom_fallback_403
   delegate_to: localhost
   run_once: true
+  become: false
   ignore_errors: true
 
 - name: Copy default fallback files
