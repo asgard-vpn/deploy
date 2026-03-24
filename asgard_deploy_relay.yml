@@ -105,15 +105,6 @@
         mode: '0644'
         force: true
 
-    - name: Copy MTProto Proxy files
-      ansible.builtin.copy:
-        src: mtproxy
-        force: true
-        dest: "/opt/asgard"
-        owner: root
-        group: root
-        mode: "0644"
-
     - name: Setup Node Agent config
       ansible.builtin.template:
         src: templates/node-agent.yaml.j2
