@@ -120,7 +120,7 @@ services:
 {% endif %}
 {% if enable_config_distributor | default(true) | bool %}
   config-distributor:
-    image: asgardvpn/config-distributor:v3.2.0
+    image: asgardvpn/config-distributor:v3.2.2
     restart: always
     container_name: config-distributor
     volumes:

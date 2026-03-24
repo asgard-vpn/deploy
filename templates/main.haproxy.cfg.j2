@@ -25,6 +25,7 @@ frontend https
    acl is_script path_beg /script
    acl is_nodes path_beg /nodes
    acl is_webhook path_beg /webhook
+   acl is_alt_sub path_beg /asgard/subscriptions
 
 {% if enable_ruleset_manager | default(true) | bool %}
    use_backend ruleset_manager if host_assets is_ruleset
@@ -35,6 +36,7 @@ frontend https
    use_backend config_distributor if host_assets is_script
    use_backend config_distributor if host_assets is_nodes
    use_backend config_distributor if host_assets is_webhook
+   use_backend config_distributor if host_assets is_alt_sub
 {% endif %}
 
    # WebSocket обработка

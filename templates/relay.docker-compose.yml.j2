@@ -68,7 +68,7 @@ services:
             - ./sing-box:/etc/sing-box
             - /etc/letsencrypt:/opt/asgard/certs:ro
         ports:
-            - "${HYSTERIA_PORT}:8443/udp"
+            - "${HYSTERIA_PORT}:${HYSTERIA_PORT}/udp"
             - "${TUIC_PORT}:${TUIC_PORT}/udp"
             - "${SS_PORT}:${SS_PORT}/tcp"
             - "${SS_PORT}:${SS_PORT}/udp"

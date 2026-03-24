@@ -22,7 +22,7 @@ templates:
   directory: /opt/asgard/templates
   vars:
     hysteria_salamander_password: {{ hysteria_salamander_password }}
-    hysteria_port: 8443
+    hysteria_port: {{ hysteria_port }}
     tuic_port: {{ tuic_port }}
     ss_port: {{ ss_port }}
     ss_password: {{ ss_password }}
@@ -63,14 +63,14 @@ nodes:
 # Squads — привязка групп клиентов к нодам. node = hostname из groups.relays.
 squads:
   Routers:
-    - node: {{ groups['relays'][0] }}
+    - node: {{ groups['relays'][1] }}
       service: sing-box
       template: hysteria2.link.tmpl
       clients:
         - sing-box
       vars:
   Gamers:
-    - node: {{ groups['relays'][0] }}
+    - node: {{ groups['relays'][1] }}
       service: sing-box
       template: hysteria2.link.tmpl
       clients:

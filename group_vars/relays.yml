@@ -10,12 +10,6 @@ enable_sing_box: true
 enable_pingtunnel: true
 enable_node_agent: true
 
-# Маскировка MTProxy под легитимный домен
-mtproto_camouflage_domain: www.example.org
-
-# Домен главной ноды (assets) для node-agent и подписок
-main_node_domain: assets.example.com
-
 # Роль asgard_logrotate
 asgard_logrotate_enabled: true
 
