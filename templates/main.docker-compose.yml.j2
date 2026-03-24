@@ -1,4 +1,20 @@
-version: "3.8"
+x-common: &common
+  ulimits:
+    nofile:
+      soft: 1048576
+      hard: 1048576
+  restart: always
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 50m
+      max-file: 2
+
+x-env: &env
+  env_file: remnawave.env
+
 services:
   gateway:
     image: "haproxy:3.0.4-alpine"
@@ -21,10 +37,10 @@ services:
 {% endif %}
 
   remnawave-db:
-    image: postgres:17.5
+    image: postgres:17.6
     container_name: 'remnawave-db'
     hostname: remnawave-db
-    restart: always
+    <<: [*common, *logging, *env]
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -41,11 +57,10 @@ services:
       retries: 3
 
   remnawave:
-    image: remnawave/backend:2.2.6
+    image: remnawave/backend:2.6.4
     container_name: 'remnawave'
     hostname: remnawave
-    restart: always
-    env_file: remnawave.env
+    <<: [*common, *logging, *env]
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:${METRICS_PORT:-3001}/health']
       interval: 30s
@@ -60,10 +75,16 @@ services:
 
 
   remnawave-redis:
-    image: valkey/valkey:8.0.2-alpine
+    image: valkey/valkey:8.1-alpine
     container_name: remnawave-redis
     hostname: remnawave-redis
-    restart: always
+    <<: [*common, *logging]
+    command: >
+      valkey-server
+      --save ""
+      --appendonly no
+      --maxmemory-policy noeviction
+      --loglevel warning
     volumes:
       - remnawave-redis-data:/data
     healthcheck:
@@ -73,11 +94,12 @@ services:
       retries: 3
 
   remnawave-subscription-page:
-      image: remnawave/subscription-page:6.1.0
+      image: remnawave/subscription-page:7.1.8
       container_name: remnawave-subscription-page
       hostname: remnawave-subscription-page
       restart: always
       environment:
+        - REMNAWAVE_API_TOKEN=${REMNAWAVE_API_TOKEN}
         - REMNAWAVE_PANEL_URL=${REMNAWAVE_PANEL_URL}
         - CUSTOM_SUB_PREFIX=subscriptions
         - APP_PORT=3001
