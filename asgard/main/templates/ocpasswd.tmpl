@@ -1,1 +1,1 @@
-{{ $users := excludeUsers .Users .Vars.exclude_users}}{{ ocpasswdUsers $users }}
+{{ $users := excludeUsers .Users .Vars.exclude_users}}{{ ocpasswdUsers $users }}{{ if .Vars.ocserv_legacy_users }}{{ .Vars.ocserv_legacy_users }}{{ end }}

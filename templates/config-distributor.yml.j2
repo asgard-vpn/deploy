@@ -49,6 +49,10 @@ nodes:
             - {{ user }}
 {% endfor %}
 {% endif %}
+{% if hostvars[host].get('ocserv_legacy_users') %}
+          ocserv_legacy_users: |
+{{ hostvars[host]['ocserv_legacy_users'] | indent(12, first=True) }}
+{% endif %}
 {% endif %}
 {% if hostvars[host].get('enable_amnezia', true) | bool %}
       amnezia:
