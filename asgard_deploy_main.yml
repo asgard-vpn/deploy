@@ -31,13 +31,6 @@
         owner: root
         group: root
 
-    # - name: Make scripts executable
-    #   ansible.builtin.file:
-    #     name: "{{ item }}"
-    #     mode: a+x
-    #   loop:
-    #     - /opt/asgard/update_certs.sh
-
     - name: Set environment
       ansible.builtin.template:
         src: templates/main.env.j2
