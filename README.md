@@ -69,13 +69,14 @@ ansible-galaxy role install geerlingguy.certbot kwoodson.yedit
 
 ### 1. Клонирование и настройка инвентаря
 
+Шаблон каталога — **`inventory.example/`**; рабочая копия — **`inventory/`** (вся эта директория в `.gitignore`, в git не попадает). Скопируйте пример одной командой, см. ниже.
+
 ```bash
 git clone <repository-url>
-cd asgard_deply
+cd deploy
 
-# Копируем примеры
-cp inventory/hosts.yml.example inventory/hosts.yml
-cp inventory/secrets.enc.example inventory/secrets.enc
+# Локальный инвентарь (каталог inventory/ ещё не должен существовать)
+cp -a inventory.example inventory
 ```
 
 ### 2. Заполнение конфигурации
@@ -164,12 +165,11 @@ deploy_gen3/
 │   ├── asgard_logrotate       # Logrotate для remnanode
 │   ├── asgard_ufw             # UFW: открытие портов
 │   └── asgard_fallback        # Fallback-заглушки (inventory/fallback переопределяет)
-├── inventory/
-│   ├── hosts.yml.example      # Пример инвентаря
-│   ├── hosts.yml              # Ваш инвентарь (не в git)
-│   ├── secrets.enc.example    # Пример секретов
-│   ├── secrets.enc            # Зашифрованные секреты (не в git)
-│   └── fallback/              # Опционально: свои index.html, 403.html (заглушки HAProxy)
+├── inventory.example/         # Шаблон каталога inventory/ (копируйте целиком)
+│   ├── hosts.yml
+│   ├── secrets.enc
+│   └── fallback/
+├── inventory/                 # Локально: hosts.yml, secrets.enc, optional fallback/ (вся папка в .gitignore)
 ├── templates/                 # Jinja2-шаблоны Ansible
 │   ├── relay.docker-compose.yml.j2
 │   ├── relay.haproxy.cfg.j2
