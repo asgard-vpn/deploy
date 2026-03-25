@@ -8,8 +8,15 @@
 # asgard_ssh_disable_password_auth: false  # true — отключить пароль после настройки ключей
 
 # Порты протоколов (значения по умолчанию для relay/config-distributor)
-hysteria_port: 8443
-tuic_port: 9443
-ss_port: 9008
-amnezia_port: 27015
-remnawave_app_port: 8717
+
+# Remnawave Controlled
+remnawave_app_port: 8721
+xray_main_port: 443 # tcp
+shadowsocks_port: 9421
+
+# Sing-box
+tuic_port: 8421
+hysteria_port: 8443 # udp
+
+# Amnezia
+amnezia_port: 27326

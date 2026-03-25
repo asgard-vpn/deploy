@@ -58,7 +58,7 @@
         mode: "0644"
         owner: root
         group: root
-      when: enable_ocserv | default(true) | bool
+      when: enable_reverse_proxy | default(true) | bool
 
     - name: Setup cert update script
       ansible.builtin.template:
@@ -86,6 +86,7 @@
     - name: Setup logrotate
       ansible.builtin.include_role:
         name: asgard_logrotate
+      when: enable_remnanode | default(true) | bool
 
     - name: Open firewall ports
       ansible.builtin.include_role:
@@ -97,6 +98,7 @@
         dest: /opt/asgard/geo/geoip_RU.dat
         mode: '0644'
         force: true
+      when: enable_remnanode | default(true) | bool
 
     - name: Download latest Geosite database
       ansible.builtin.get_url:
@@ -104,6 +106,7 @@
         dest: /opt/asgard/geo/geosite_RU.dat
         mode: '0644'
         force: true
+      when: enable_remnanode | default(true) | bool
 
     - name: Setup Node Agent config
       ansible.builtin.template:

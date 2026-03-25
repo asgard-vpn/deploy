@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ansible-playbook -e @inventory/secrets.enc --ask-vault-pass -i inventory/hosts.yml "$@"
+ansible-playbook -e @deploy/secrets.enc --ask-vault-pass -i deploy/inventory "$@"

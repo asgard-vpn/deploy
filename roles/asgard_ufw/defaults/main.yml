@@ -1,4 +1,3 @@
 ---
-asgard_ufw_allow_node_port: false
 asgard_ufw_tcp_ports: []
 asgard_ufw_udp_ports: []

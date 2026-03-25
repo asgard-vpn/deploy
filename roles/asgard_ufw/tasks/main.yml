@@ -1,16 +1,6 @@
 ---
 # UFW: открытие портов для Asgard сервисов
 
-- name: Allow node port (remnawave)
-  community.general.ufw:
-    rule: allow
-    proto: tcp
-    port: "{{ remnawave_app_port }}"
-    state: enabled
-  when:
-    - asgard_ufw_allow_node_port | default(false) | bool
-    - remnawave_app_port is defined
-
 - name: Open UDP ports
   community.general.ufw:
     rule: allow

@@ -33,17 +33,6 @@
                 "certificate_path": "/opt/asgard/certs/live/{{ .Vars.hysteria_domain }}/fullchain.pem",
                 "key_path": "/opt/asgard/certs/live/{{ .Vars.hysteria_domain }}/privkey.pem"
             }
-        },
-        {
-            "type": "shadowsocks",
-            "listen": "0.0.0.0",
-            "listen_port": {{ .Vars.ss_port }},
-            "method": "2022-blake3-aes-256-gcm",
-            "password": "{{ .Vars.ss_password }}",
-            "users": {{ shadowSocksUsers .Users }},
-            "multiplex": {
-                "enabled": true
-            }
         }
     ],
     "outbounds": [

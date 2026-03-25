@@ -14,4 +14,4 @@
             notifempty
             copytruncate
         }
-  when: asgard_logrotate_enabled | default(false) | bool
+  when: enable_remnanode | default(true) | bool

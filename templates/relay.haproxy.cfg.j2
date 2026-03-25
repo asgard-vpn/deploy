@@ -11,12 +11,15 @@ frontend https
    timeout client 300s
    tcp-request content accept if { req_ssl_hello_type 1 }
 
-   #use_backend mtproto if { req_ssl_sni -i {{ mtproto_camouflage_domain }} }
 {% if enable_ocserv | default(true) | bool %}
    use_backend ocserv if { req_ssl_sni -i {{ ocserv_domain }} }
 {% endif %}
 
+{% if enable_remnanode | default(true) | bool %}
    default_backend remnanode
+{% else %}
+   default_backend http_index
+{% endif %}
 
 frontend http_camouflage
     bind 0.0.0.0:80
@@ -26,23 +29,20 @@ frontend http_camouflage
     use_backend http_index if is_root
     default_backend http_403
 
+{% if enable_remnanode | default(true) | bool %}
 backend remnanode
    mode tcp
    option ssl-hello-chk
    server remnanode remnanode:443
-
-#backend mtproto
-#   mode tcp
-#   option ssl-hello-chk
-#   server mtproto mtproto:8889
+{% endif %}
 
 {% if enable_ocserv | default(true) | bool %}
 backend ocserv
    mode tcp
    option ssl-hello-chk
    server ocserv ocserv:443 send-proxy-v2
-
 {% endif %}
+
 backend http_403
    mode http
    http-response set-header Server "Web Server"

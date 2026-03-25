@@ -1,5 +1,6 @@
 services:
-{% if enable_ocserv | default(true) | bool %}
+# Use reverse proxy to process different services on 1 port
+{% if enable_reverse_proxy | default(true) | bool %}
     gateway:
         image: "haproxy:3.0.4-alpine"
         container_name: gateway
@@ -10,8 +11,9 @@ services:
         ports:
         - "443:443/tcp"
         user: root
-
 {% endif %}
+
+{% if enable_remnanode | default(true) | bool %}
     remnanode:
         container_name: remnanode
         hostname: remnanode
@@ -25,7 +27,7 @@ services:
                 hard: 1048576
         ports:
             - "0.0.0.0:${NODE_PORT}:${NODE_PORT}"
-{% if enable_ocserv | default(true) | bool %}
+{% if enable_reverse_proxy | default(true) | bool %}
             # 443 handled by gateway
 {% else %}
             - "443:443"
@@ -37,6 +39,7 @@ services:
             - './geo/geosite_RU.dat:/usr/local/share/xray/geosite_RU.dat'
             - '/var/log/remnanode:/var/log/remnanode'
             - './remnanode_certs:/etc/asgard_certs'
+{% endif %}
 
 {% if enable_warp | default(true) | bool %}
     # published local port 1080
@@ -59,6 +62,7 @@ services:
         - warp_config:/var/lib/cloudflare-warp
 
 {% endif %}
+
 {% if enable_sing_box | default(true) | bool %}
     sing-box:
         image: ghcr.io/sagernet/sing-box:v1.12.13
@@ -70,11 +74,9 @@ services:
         ports:
             - "${HYSTERIA_PORT}:${HYSTERIA_PORT}/udp"
             - "${TUIC_PORT}:${TUIC_PORT}/udp"
-            - "${SS_PORT}:${SS_PORT}/tcp"
-            - "${SS_PORT}:${SS_PORT}/udp"
         command: -D /var/lib/sing-box -c /etc/sing-box/config.json run
-
 {% endif %}
+
 {% if enable_ocserv | default(true) | bool %}
     ocserv:
         image: quay.io/aminvakil/ocserv:1.3.0
@@ -82,7 +84,10 @@ services:
         container_name: ocserv
         hostname: ${OCSERV_DOMAIN}
         ports:
-        - "0.0.0.0:443:443/udp"
+        - "443:443/udp"
+{% if enable_reverse_proxy | default(true) | bool %}
+        - "443:443/tcp"
+{% endif %}
         volumes:
         - "./ocserv/config/ocserv.conf:/etc/ocserv/ocserv.conf:ro"
         - "./ocserv/certs:/etc/ocserv/certs:ro"
@@ -94,8 +99,8 @@ services:
         - NET_ADMIN
         security_opt:
         - no-new-privileges
-
 {% endif %}
+
 {% if enable_pingtunnel | default(true) | bool %}
     pingtunnel:
         image: esrrhs/pingtunnel:latest
@@ -104,8 +109,8 @@ services:
         network_mode: host
         command: "./pingtunnel -type server -key ${PINGTUNNEL_KEY}"
         privileged: true
-
 {% endif %}
+
 {% if enable_amnezia | default(true) | bool %}
     amnezia:
         image: asgardvpn/amnezia:v1.0.0
@@ -134,8 +139,8 @@ services:
             timeout: 15s
             start_period: 60s
             retries: 3
-
 {% endif %}
+
 {% if enable_node_agent | default(true) | bool %}
     node-agent:
         image: asgardvpn/node-agent:v1.2.0
@@ -154,6 +159,7 @@ services:
             - ./amnezia/clients:/etc/amnezia/clients:ro
 {% endif %}
 {% endif %}
+
 {% if enable_warp | default(true) | bool %}
 volumes:
     warp_config:

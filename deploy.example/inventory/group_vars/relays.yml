@@ -1,0 +1,15 @@
+# Переменные для группы relays (реле-ноды)
+# UFW: списки портов на хосте — asgard_ufw_tcp_ports / asgard_ufw_udp_ports в hosts.yml (см. пример в deploy.example).
+
+asgard_admin_password: "{{ asgard_relay_password }}"
+
+# Опциональные сервисы (false = не включать в docker-compose)
+enable_reverse_proxy: true
+enable_remnanode: true
+enable_ocserv: true
+enable_amnezia: true
+enable_warp: true
+enable_sing_box: true
+enable_pingtunnel: true
+enable_node_agent: true
+

@@ -1,9 +1,13 @@
 # Минимальные relay (ex-hole): только remnanode, без доп. сервисов.
 # Туннель для двухзвенного VPN: клиент → hole → relay → интернет.
 
+enable_remnanode: true
+enable_reverse_proxy: false
 enable_ocserv: false
 enable_amnezia: false
 enable_warp: false
 enable_sing_box: false
 enable_pingtunnel: false
 enable_node_agent: false
+
+asgard_ufw_tcp_ports: [443, "{{ remnawave_app_port }}"]

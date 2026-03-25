@@ -3,5 +3,7 @@
 backup
 rkhunter
 
-# Локальный инвентарь и секреты (шаблоны — в inventory.example/)
+# Локальный инвентарь и секреты (шаблон — deploy.example/)
+deploy/
+
 inventory/

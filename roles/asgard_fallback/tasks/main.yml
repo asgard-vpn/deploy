@@ -1,20 +1,20 @@
 ---
 # Fallback-заглушки для HAProxy (index.html, 403.html).
 # По умолчанию — из fallback/ (корень проекта).
-# Переопределение: положите свои index.html и/или 403.html в inventory/fallback/.
+# Переопределение: deploy/fallback/ (см. run_playbook.sh: -i deploy/inventory).
 
-- name: Check for custom fallback in inventory
+- name: Check for custom fallback in deploy
   ansible.builtin.stat:
-    path: "{{ playbook_dir }}/inventory/fallback/index.html"
+    path: "{{ playbook_dir }}/deploy/fallback/index.html"
   register: custom_fallback_index
   delegate_to: localhost
   run_once: true
   become: false
   ignore_errors: true
 
-- name: Check for custom fallback 403 in inventory
+- name: Check for custom fallback 403 in deploy
   ansible.builtin.stat:
-    path: "{{ playbook_dir }}/inventory/fallback/403.html"
+    path: "{{ playbook_dir }}/deploy/fallback/403.html"
   register: custom_fallback_403
   delegate_to: localhost
   run_once: true
@@ -29,18 +29,18 @@
     owner: root
     group: root
 
-- name: Overlay custom fallback index.html from inventory
+- name: Overlay custom fallback index.html from deploy
   ansible.builtin.copy:
-    src: inventory/fallback/index.html
+    src: "{{ playbook_dir }}/deploy/fallback/index.html"
     dest: "{{ asgard_fallback_dest | default('/opt/asgard/fallback') }}/index.html"
     mode: "0644"
     owner: root
     group: root
   when: custom_fallback_index is succeeded and custom_fallback_index.stat.exists
 
-- name: Overlay custom fallback 403.html from inventory
+- name: Overlay custom fallback 403.html from deploy
   ansible.builtin.copy:
-    src: inventory/fallback/403.html
+    src: "{{ playbook_dir }}/deploy/fallback/403.html"
     dest: "{{ asgard_fallback_dest | default('/opt/asgard/fallback') }}/403.html"
     mode: "0644"
     owner: root

@@ -8,13 +8,3 @@ remnawave_docs_enabled: false
 # Опциональные сервисы (false = не включать в docker-compose)
 enable_config_distributor: true
 enable_ruleset_manager: true
-
-# Порты для config-distributor (генерация подписок). Main использует свои значения.
-hysteria_port: 2053
-tuic_port: 9443
-ss_port: 9008
-ss_password: "{{ ss_password }}"
-
-# Опционально: домен ocserv, чьи серты не мержить в общий PEM
-# (когда main хранит серты relay-серверов)
-# ocserv_domain: ""
