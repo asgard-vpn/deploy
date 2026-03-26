@@ -6,4 +6,3 @@ rkhunter
 # Локальный инвентарь и секреты (шаблон — deploy.example/)
 deploy/
 
-inventory/
